@@ -7,7 +7,7 @@ const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/api/token';
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-
+//just try to print just for testing purposes
 let accessToken = '';
 
 /** Fetches a new access token from Spotify */
