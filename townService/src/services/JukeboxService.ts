@@ -19,19 +19,20 @@ export async function getSpotifyAccessToken(): Promise<void> {
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
+            'base64',
+          )}`,
         },
       },
     );
     accessToken = response.data.access_token;
   } catch (error) {
-    
     console.error('Error fetching Spotify access token:', error);
   }
 }
 
 /** Searches Spotify for tracks by a given query */
-export async function searchSpotifyTracks(query: string): Promise<any> {
+export async function searchSpotifyTracks(query: string) {
   if (!accessToken) {
     await getSpotifyAccessToken();
   }
