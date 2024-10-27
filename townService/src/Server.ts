@@ -40,7 +40,7 @@ app.use('/docs', swaggerUi.serve, async (_req: Express.Request, res: Express.Res
 });
 
 // Spotify API route - directly registered here
-app.get('/spotify/search', spotifySearchController);
+app.get('/jukebox/search', spotifySearchController);
 
 // Register the TownsController routes with the express server
 RegisterRoutes(app);

@@ -7,11 +7,11 @@ const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/api/token';
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-// just try to print just for testing purposes
+
 let accessToken = '';
 
 /** Fetches a new access token from Spotify */
-async function getSpotifyAccessToken(): Promise<void> {
+export async function getSpotifyAccessToken(): Promise<void> {
   try {
     const response = await axios.post(
       SPOTIFY_AUTH_URL,
@@ -19,9 +19,7 @@ async function getSpotifyAccessToken(): Promise<void> {
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
-            'base64',
-          )}`,
+          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`,
         },
       },
     );
@@ -49,12 +47,8 @@ export async function searchSpotifyTracks(query: string): Promise<any> {
       },
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error searching Spotify tracks:', error);
-    if (error.response?.status === 401) {
-      await getSpotifyAccessToken();
-      return searchSpotifyTracks(query); // Retry with new token
-    }
     throw new Error('Failed to fetch tracks from Spotify');
   }
 }
