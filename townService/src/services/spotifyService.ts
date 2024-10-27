@@ -25,6 +25,7 @@ export async function getSpotifyAccessToken(): Promise<void> {
     );
     accessToken = response.data.access_token;
   } catch (error) {
+    
     console.error('Error fetching Spotify access token:', error);
   }
 }
