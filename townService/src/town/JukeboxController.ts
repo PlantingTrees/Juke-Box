@@ -1,7 +1,7 @@
 // src/controllers/spotifyController.ts
 
 import { Request, Response } from 'express';
-import { searchSpotifyTracks } from '../services/spotifyService';
+import { searchSpotifyTracks } from '../services/JukeboxService';
 
 /** Controller for handling Spotify search requests */
 export async function spotifySearchController(req: Request, res: Response): Promise<Response> {

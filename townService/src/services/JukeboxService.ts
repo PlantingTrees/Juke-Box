@@ -11,7 +11,7 @@ const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 let accessToken = '';
 
 /** Fetches a new access token from Spotify */
-async function getSpotifyAccessToken(): Promise<void> {
+export async function getSpotifyAccessToken(): Promise<void> {
   try {
     const response = await axios.post(
       SPOTIFY_AUTH_URL,
@@ -51,10 +51,6 @@ export async function searchSpotifyTracks(query: string) {
     return response.data;
   } catch (error) {
     console.error('Error searching Spotify tracks:', error);
-    if (error.response?.status === 401) {
-      await getSpotifyAccessToken();
-      return searchSpotifyTracks(query); // Retry with new token
-    }
     throw new Error('Failed to fetch tracks from Spotify');
   }
 }
