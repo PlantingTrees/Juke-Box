@@ -1,4 +1,4 @@
-// src/services/spotifyService.ts
+// src/services/JukeboxService.ts
 
 import axios from 'axios';
 
@@ -40,7 +40,7 @@ export async function searchSpotifyTracks(query: string) {
       params: {
         q: query,
         type: 'track',
-        limit: 10,
+        limit: 5,
       },
     });
     return response.data;

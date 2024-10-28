@@ -1,6 +1,6 @@
-// src/services/__tests__/spotifyService.test.ts
+// src/services/JukeboxService.test.ts
 import axios from 'axios';
-import { searchSpotifyTracks } from '../services/JukeboxService';
+import { searchSpotifyTracks } from './JukeboxService';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -16,7 +16,7 @@ describe('Spotify Service', () => {
         data: { access_token: 'test_access_token' },
       });
 
-      const { getSpotifyAccessToken } = await import('../services/JukeboxService');
+      const { getSpotifyAccessToken } = await import('./JukeboxService');
       await getSpotifyAccessToken();
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -37,7 +37,7 @@ describe('Spotify Service', () => {
     it('handles errors when fetching the access token', async () => {
       mockedAxios.post.mockRejectedValueOnce(new Error('Token fetch failed'));
 
-      const { getSpotifyAccessToken } = await import('../services/JukeboxService');
+      const { getSpotifyAccessToken } = await import('./JukeboxService');
       await expect(getSpotifyAccessToken()).resolves.not.toThrow();
 
       expect(mockedAxios.post).toHaveBeenCalledTimes(1);

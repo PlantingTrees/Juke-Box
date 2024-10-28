@@ -1,4 +1,4 @@
-// src/controllers/spotifyController.ts
+// src/controllers/JukeboxController.ts
 
 import { Request, Response } from 'express';
 import { searchSpotifyTracks } from '../services/JukeboxService';
