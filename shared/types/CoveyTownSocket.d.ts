@@ -71,6 +71,7 @@ export interface ViewingArea {
 
 export type Song = {
   artistName: string;
+  songName: string;
   albumName: string;
   artworkUrl: string;
   songDurationSec: number;
