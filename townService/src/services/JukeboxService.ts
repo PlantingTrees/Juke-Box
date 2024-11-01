@@ -25,7 +25,7 @@ export async function getSpotifyAccessToken(): Promise<void> {
     );
     accessToken = response.data.access_token;
   } catch (error) {
-    throw new Error('Error fetching Spotify access token:');
+    throw new Error('Token fetch failed');
   }
 }
 /** Searches Spotify for tracks by a given query */

@@ -38,7 +38,7 @@ describe('Jukebox Service', () => {
       mockedAxios.post.mockRejectedValueOnce(new Error('Token fetch failed'));
 
       const { getSpotifyAccessToken } = await import('./JukeboxService');
-      await expect(getSpotifyAccessToken()).resolves.not.toThrow();
+      await expect(getSpotifyAccessToken()).rejects.toThrow('Token fetch failed');
 
       expect(mockedAxios.post).toHaveBeenCalledTimes(1);
     });
