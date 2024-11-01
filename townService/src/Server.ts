@@ -11,7 +11,7 @@ import TownsStore from './lib/TownsStore';
 import { ClientToServerEvents, ServerToClientEvents } from './types/CoveyTownSocket';
 import { TownsController } from './town/TownsController';
 import { logError } from './Utils';
-import { spotifySearchController } from './town/JukeboxController';
+import JukeboxController from './town/JukeboxController';
 
 // Create the server instances
 const app = Express();
@@ -40,7 +40,7 @@ app.use('/docs', swaggerUi.serve, async (_req: Express.Request, res: Express.Res
 });
 
 // Spotify API route - directly registered here
-app.get('/jukebox/search', spotifySearchController);
+app.get('/jukebox/search', JukeboxController);
 
 // Register the TownsController routes with the express server
 RegisterRoutes(app);
