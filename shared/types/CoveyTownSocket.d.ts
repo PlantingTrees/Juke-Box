@@ -78,6 +78,17 @@ export type Song = {
   trackUri: string;
 }
 
+export interface SpotifyTrack {
+  name: string;
+  duration_ms: number;
+  album: {
+    name: string;
+    images: { url: string }[];
+  };
+  artists: { name: string }[];
+  uri: string;
+}
+
 export interface JukeboxArea {
   id: string;
   isPlaying: boolean;
