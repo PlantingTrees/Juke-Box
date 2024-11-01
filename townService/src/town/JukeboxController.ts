@@ -14,7 +14,6 @@ const spotifySearchController = async (req: Request, res: Response): Promise<Res
     const searchResults = await searchSpotifyTracks(query as string);
     return res.json(searchResults);
   } catch (error) {
-    console.error('Spotify search error:', error);
     return res.status(500).json({ error: 'Failed to fetch tracks from Spotify' });
   }
 };

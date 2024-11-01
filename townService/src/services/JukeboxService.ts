@@ -1,7 +1,7 @@
 // src/services/JukeboxService.ts
 
 import axios from 'axios';
-import { Song } from '../types/CoveyTownSocket';
+import { Song, SpotifyTrack } from '../types/CoveyTownSocket';
 
 const SPOTIFY_BASE_URL = 'https://api.spotify.com/v1';
 const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/api/token';
@@ -25,7 +25,7 @@ export async function getSpotifyAccessToken(): Promise<void> {
     );
     accessToken = response.data.access_token;
   } catch (error) {
-    console.error('Error fetching Spotify access token:', error);
+    throw new Error('Error fetching Spotify access token:');
   }
 }
 /** Searches Spotify for tracks by a given query */
@@ -45,7 +45,7 @@ export async function searchSpotifyTracks(query: string): Promise<Song[]> {
       },
     });
     // Map the Spotify response to an array of Song objects
-    return response.data.tracks.items.map((track: any) => ({
+    return response.data.tracks.items.map((track: SpotifyTrack) => ({
       trackName: track.name,
       trackDuration: track.duration_ms,
       albumName: track.album.name,
@@ -54,7 +54,6 @@ export async function searchSpotifyTracks(query: string): Promise<Song[]> {
       trackUri: track.uri,
     }));
   } catch (error) {
-    console.error('Error searching Spotify tracks:', error);
     throw new Error('Failed to fetch tracks from Spotify');
   }
 }
