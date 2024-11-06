@@ -26,8 +26,7 @@ export default class JukeboxController {
   voteToSkip(): void {}
   //search for song
   /** Controller for handling Spotify search requests */
-  searchSong(){
-    async (req: Request, res: Response): Promise<Response> => {
+  async searchSong(req: Request, res: Response):Promise<Response> {
       const { query } = req.query;
       if (!query) {
         return res.status(400).json({ error: 'Query parameter is required' });
@@ -43,4 +42,3 @@ export default class JukeboxController {
   } 
 };
 
-}
