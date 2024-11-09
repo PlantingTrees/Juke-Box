@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
 import { useInteractable } from '../../../classes/TownController';
 import {
@@ -11,42 +11,47 @@ import {
   ModalContent,
   Button,
 } from '@chakra-ui/react';
-import JukeboxAreaController from '../../../classes/JukeboxAreaController';
+import useTownController from '../../../hooks/useTownController';
 
-function JukeboxArea({ jukeboxArea }: { jukeboxArea: JukeboxAreaInteractable }): JSX.Element {
+export default function JukeboxArea(): JSX.Element {
+  const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
+  const coveyTownController = useTownController();
   const [isOpen, setIsOpen] = useState(false);
 
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+  const closeModal = useCallback(() => {
+    if (jukeboxArea) {
+      coveyTownController.interactEnd(jukeboxArea);
+    }
+  }, [coveyTownController, jukeboxArea]);
+
+  // Automatically open the modal when jukeboxArea is available
+  useEffect(() => {
+    if (jukeboxArea) {
+      setIsOpen(true);
+    }
+  }, [jukeboxArea]);
 
   return (
     <>
-      <Button onClick={onOpen}>Open Jukebox</Button>
-
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalHeader>Jukebox</ModalHeader>
-          <ModalBody>
-            <p>Here you can control the jukebox!</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme='blue' onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {jukeboxArea && (
+        <Modal
+          isOpen={isOpen}
+          onClose={() => {
+            closeModal();
+            coveyTownController.unPause();
+          }}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalCloseButton />
+            <ModalHeader>Jukebox</ModalHeader>
+            <ModalBody>
+              <p>Here you can control the jukebox!</p>
+            </ModalBody>
+            <ModalFooter>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
     </>
   );
-}
-
-export default function JukeboxAreaWrapper(): JSX.Element {
-  const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
-
-  if (jukeboxArea) {
-    <JukeboxArea jukeboxArea={jukeboxArea} />;
-  }
-  return <></>;
 }
