@@ -48,7 +48,7 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
   }
 
   public set songs(songs: Song[]) {
-    if (this._model.queue !== songs) {
+    if (JSON.stringify(this._model.queue) !== JSON.stringify(songs)) {
       this._model.queue = songs;
       this.emit('songsAdded', songs);
     }
@@ -63,7 +63,7 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
   //"For every search x, there is an x that equals y."
   //The same property would be applied to the actual queue as well.
   public set results(search: Song[]) {
-    if (this._model.searchList !== search) {
+    if (JSON.stringify(this._model.searchList) !== JSON.stringify(search)) {
       this._model.searchList = search;
       this.emit('playerSearch', search);
     }

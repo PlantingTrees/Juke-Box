@@ -44,6 +44,11 @@ describe('[T2] JukeboxAreaController Test', () => {
       expect(mockListeners.songsAdded).toBeCalledWith(listOfSongs);
       expect(testArea.songs).toBe(listOfSongs);
     });
+    it('does not emit a songsAdded event if the song queue does not change', () => {
+      const currentQueue = testArea.songs;
+      testArea.songs = [...currentQueue];
+      expect(mockListeners.songsAdded).not.toBeCalled();
+    });
   });
   describe('Setting up the Search List Property', () => {
     it('updates the search list property and emits a songAdded event is a search is made', () => {
@@ -69,6 +74,11 @@ describe('[T2] JukeboxAreaController Test', () => {
       testArea.results = newSearch;
       expect(mockListeners.playerSearch).toBeCalledWith(newSearch);
       expect(testArea.results).toBe(newSearch);
+    });
+    it('does not emit a songsAdded event if the song queue does not change', () => {
+      const searchResults = testArea.results;
+      testArea.songs = [...searchResults];
+      expect(mockListeners.playerSearch).not.toBeCalled();
     });
   });
   describe('Setting up the volume property', () => {

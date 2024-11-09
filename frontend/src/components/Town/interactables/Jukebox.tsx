@@ -9,7 +9,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalContent,
-  Button,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
 
@@ -47,8 +46,7 @@ export default function JukeboxArea(): JSX.Element {
             <ModalBody>
               <p>Here you can control the jukebox!</p>
             </ModalBody>
-            <ModalFooter>
-            </ModalFooter>
+            <ModalFooter></ModalFooter>
           </ModalContent>
         </Modal>
       )}
