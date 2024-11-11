@@ -1,10 +1,12 @@
 import EventEmitter from 'events';
 import TypedEventEmitter from 'typed-emitter';
-import { JukeboxArea, JukeboxArea as JukeboxAreaModel, Song } from '../types/CoveyTownSocket';
+import { JukeboxArea as JukeboxAreaModel, Song } from '../types/CoveyTownSocket';
 
 export type JukeboxAreaEvents = {
   songsAdded: (songs: Song[]) => void;
   currentlyPlaying: (isPlaying: boolean) => void;
+  playerSearch: (search: Song[]) => void;
+  volumeLevelChanged: (level: number) => void;
 };
 
 export default class JukeboxAreaController extends (EventEmitter as new () => TypedEventEmitter<JukeboxAreaEvents>) {
@@ -15,30 +17,59 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
     this._model = jukeboxAreaModel;
   }
 
-  get id() {
+  public get id() {
     return this._model.id;
   }
 
-  get isPlaying() {
+  public get isPlaying() {
     return this._model.isPlaying;
   }
 
   public set isPlaying(isPlaying: boolean) {
-    if (this._model.isPlaying != isPlaying) {
+    if (this._model.isPlaying !== isPlaying) {
       this._model.isPlaying = isPlaying;
       this.emit('currentlyPlaying', isPlaying);
     }
   }
 
-  get volume() {
+  public get volume() {
     return this._model.volume;
   }
 
-  get songs(): Song[] | undefined {
+  public set volume(volume: number) {
+    if (this._model.volume !== volume) {
+      this._model.volume = volume;
+      this.emit('volumeLevelChanged', volume);
+    }
+  }
+
+  public get songs() {
     return this._model.queue;
   }
 
-  get numOfSongs() {
+  public set songs(songs: Song[]) {
+    if (JSON.stringify(this._model.queue) !== JSON.stringify(songs)) {
+      this._model.queue = songs;
+      this.emit('songsAdded', songs);
+    }
+  }
+
+  public get results() {
+    return this._model.searchList;
+  }
+
+  //Implicity there would be no way that a result would be the same.
+  //Every search would be different unless the user looks for the same thing.
+  //"For every search x, there is an x that equals y."
+  //The same property would be applied to the actual queue as well.
+  public set results(search: Song[]) {
+    if (JSON.stringify(this._model.searchList) !== JSON.stringify(search)) {
+      this._model.searchList = search;
+      this.emit('playerSearch', search);
+    }
+  }
+
+  public get numOfSongs() {
     if (this._model.queue) {
       return this._model.queue.length;
     }
@@ -46,22 +77,14 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
     return 0;
   }
 
-  addSongs(songs: Song[]) {
-    if (this._model.queue !== songs) {
-      this._model.queue = songs;
-      this.emit('songsAdded', this._model.queue);
-    }
+  public updateFrom(newModel: JukeboxAreaModel): void {
+    this.results = newModel.searchList;
+    this.volume = newModel.volume;
+    this.songs = newModel.queue;
+    this.isPlaying = newModel.isPlaying;
   }
 
-  protected _updateFrom(newModel: JukeboxArea): void {
-    if (newModel.queue) {
-      this.addSongs(newModel.queue);
-    }
-
-    this._model.isPlaying = newModel.isPlaying;
-  }
-
-  toInteractableModel(): JukeboxArea {
+  public toInteractableModel(): JukeboxAreaModel {
     return this._model;
   }
 }
