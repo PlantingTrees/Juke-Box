@@ -556,7 +556,13 @@ describe('Town', () => {
         town.initializeFromMap(testingMaps.twoJukebox);
         playerTestData.moveTo(45, 122); // Inside of "Name1" area
         expect(
-          town.addJukeboxArea({ id: 'Name1', isPlaying: false, queue: [] as Song[], volume: 0 }),
+          town.addJukeboxArea({
+            id: 'Name1',
+            isPlaying: false,
+            queue: [] as Song[],
+            volume: 0,
+            searchList: [],
+          }),
         ).toBeTruthy();
         const juekboxArea = town.getInteractable('Name1') as JukeboxArea;
         expect(juekboxArea.occupantsByID).toEqual([player.id]);
