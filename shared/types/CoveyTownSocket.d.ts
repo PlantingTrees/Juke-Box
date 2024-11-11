@@ -93,6 +93,7 @@ export interface JukeboxArea {
   id: string;
   isPlaying: boolean;
   queue: Song[];
+  searchList: Song[];
   volume: number;
 }
 
