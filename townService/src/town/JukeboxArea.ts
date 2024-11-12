@@ -43,9 +43,9 @@ export default class JukeboxArea extends InteractableArea {
     townEmitter: TownEmitter,
   ) {
     super(id, coordinates, townEmitter);
-    this._volume = volume;
     this._isPlaying = isPlaying;
     this._queue = queue;
+    this._volume = volume;
     this._searchlist = searchList;
   }
 
@@ -67,12 +67,13 @@ export default class JukeboxArea extends InteractableArea {
   /**
    * Updates the state of this JukeboxArea, setting the video, isPlaying and progress properties
    *
-   * @param viewingArea updated model
+   * @param jukeboxArea updated model
    */
-  public updateModel({ isPlaying, queue, volume }: JukeboxAreaModel) {
-    this._volume = volume;
+  public updateModel({ isPlaying, queue, volume, searchList }: JukeboxAreaModel) {
     this._isPlaying = isPlaying;
     this._queue = queue;
+    this._volume = volume;
+    this._searchlist = searchList;
   }
 
   /**
