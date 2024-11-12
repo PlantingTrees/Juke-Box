@@ -15,6 +15,8 @@ export default class JukeboxArea extends InteractableArea {
 
   private _queue: Song[];
 
+  private _searchlist: Song[];
+
   public get volume() {
     return this._volume;
   }
@@ -36,14 +38,15 @@ export default class JukeboxArea extends InteractableArea {
    * @param townEmitter a broadcast emitter that can be used to emit updates to players
    */
   public constructor(
-    { id, isPlaying, queue, volume }: JukeboxAreaModel,
+    { id, isPlaying, queue, volume, searchList }: JukeboxAreaModel,
     coordinates: BoundingBox,
     townEmitter: TownEmitter,
   ) {
     super(id, coordinates, townEmitter);
-    this._volume = volume;
     this._isPlaying = isPlaying;
     this._queue = queue;
+    this._volume = volume;
+    this._searchlist = searchList;
   }
 
   /**
@@ -64,12 +67,13 @@ export default class JukeboxArea extends InteractableArea {
   /**
    * Updates the state of this JukeboxArea, setting the video, isPlaying and progress properties
    *
-   * @param viewingArea updated model
+   * @param jukeboxArea updated model
    */
-  public updateModel({ isPlaying, queue, volume }: JukeboxAreaModel) {
-    this._volume = volume;
+  public updateModel({ isPlaying, queue, volume, searchList }: JukeboxAreaModel) {
     this._isPlaying = isPlaying;
     this._queue = queue;
+    this._volume = volume;
+    this._searchlist = searchList;
   }
 
   /**
@@ -82,6 +86,7 @@ export default class JukeboxArea extends InteractableArea {
       volume: this._volume,
       isPlaying: this._isPlaying,
       queue: this._queue,
+      searchList: this._searchlist,
     };
   }
 
@@ -97,6 +102,10 @@ export default class JukeboxArea extends InteractableArea {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new JukeboxArea({ isPlaying: false, id: name, volume: 0, queue: [] }, rect, townEmitter);
+    return new JukeboxArea(
+      { isPlaying: false, id: name, volume: 0, queue: [], searchList: [] },
+      rect,
+      townEmitter,
+    );
   }
 }

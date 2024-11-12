@@ -15,11 +15,13 @@ import {
   ChatMessage,
   Interactable,
   PlayerLocation,
+  Song,
   TownEmitter,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
 import ConversationArea from './ConversationArea';
 import Town from './Town';
+import JukeboxArea from './JukeboxArea';
 
 const mockTwilioVideo = mockDeep<TwilioVideo>();
 jest.spyOn(TwilioVideo, 'getInstance').mockReturnValue(mockTwilioVideo);
@@ -52,6 +54,48 @@ const testingMaps: TestMapDict = {
           },
           {
             type: 'ConversationArea',
+            height: 266,
+            id: 43,
+            name: 'Name2',
+            rotation: 0,
+            visible: true,
+            width: 467,
+            x: 612,
+            y: 120,
+          },
+        ],
+        opacity: 1,
+        type: 'objectgroup',
+        visible: true,
+        x: 0,
+        y: 0,
+      },
+    ],
+  },
+  twoJukebox: {
+    tiledversion: '1.9.0',
+    tileheight: 32,
+    tilesets: [],
+    tilewidth: 32,
+    type: 'map',
+    layers: [
+      {
+        id: 4,
+        name: 'Objects',
+        objects: [
+          {
+            type: 'JukeboxArea',
+            height: 237,
+            id: 39,
+            name: 'Name1',
+            rotation: 0,
+            visible: true,
+            width: 326,
+            x: 40,
+            y: 120,
+          },
+          {
+            type: 'JukeboxArea',
             height: 266,
             id: 43,
             name: 'Name2',
@@ -506,6 +550,26 @@ describe('Town', () => {
         disconnectPlayer(playerTestData);
         expect(viewingArea.occupantsByID).toEqual([]);
       });
+
+      it('Removes the player from any active jukebox area', () => {
+        // Load in a map with a jukebox area
+        town.initializeFromMap(testingMaps.twoJukebox);
+        playerTestData.moveTo(45, 122); // Inside of "Name1" area
+        expect(
+          town.addJukeboxArea({
+            id: 'Name1',
+            isPlaying: false,
+            queue: [] as Song[],
+            volume: 0,
+            searchList: [],
+          }),
+        ).toBeTruthy();
+        const juekboxArea = town.getInteractable('Name1') as JukeboxArea;
+        expect(juekboxArea.occupantsByID).toEqual([player.id]);
+        disconnectPlayer(playerTestData);
+        expect(juekboxArea.occupantsByID).toEqual([]);
+        expect(town.occupancy).toBe(0);
+      });
     });
     describe('playerMovement', () => {
       const newLocation: PlayerLocation = {
@@ -727,6 +791,16 @@ describe('Town', () => {
       expect(viewingArea1.boundingBox).toEqual({ x: 40, y: 120, height: 237, width: 326 });
       expect(viewingArea2.id).toEqual('Name2');
       expect(viewingArea2.boundingBox).toEqual({ x: 612, y: 120, height: 266, width: 467 });
+      expect(town.interactables.length).toBe(2);
+    });
+    it('Creates a JukeboxArea instance for each region on the map', async () => {
+      town.initializeFromMap(testingMaps.twoJukebox);
+      const jukeboxArea1 = town.getInteractable('Name1');
+      const jukeboxArea2 = town.getInteractable('Name2');
+      expect(jukeboxArea1.id).toEqual('Name1');
+      expect(jukeboxArea1.boundingBox).toEqual({ x: 40, y: 120, height: 237, width: 326 });
+      expect(jukeboxArea2.id).toEqual('Name2');
+      expect(jukeboxArea2.boundingBox).toEqual({ x: 612, y: 120, height: 266, width: 467 });
       expect(town.interactables.length).toBe(2);
     });
     describe('Updating interactable state in playerMovements', () => {
