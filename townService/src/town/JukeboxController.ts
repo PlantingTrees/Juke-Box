@@ -6,28 +6,28 @@ import { Song } from '../types/CoveyTownSocket';
 
 
 /** Controller for handling Spotify search requests */
-const spotifySearchController = async (req: Request, res: Response): Promise<Response> => {
-  const { query } = req.query;
-  if (!query) {
-    return res.status(400).json({ error: 'Query parameter is required' });
-  }
+// const spotifySearchController = async (req: Request, res: Response): Promise<Response> => {
+//   const { query } = req.query;
+//   if (!query) {
+//     return res.status(400).json({ error: 'Query parameter is required' });
+//   }
 
-  try {
-    const searchResults = await searchSpotifyTracks(query as string);
-    return res.json(searchResults);
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch tracks from Spotify' });
-  }
-};
+//   try {
+//     const searchResults = await searchSpotifyTracks(query as string);
+//     return res.json(searchResults);
+//   } catch (error) {
+//     return res.status(500).json({ error: 'Failed to fetch tracks from Spotify' });
+//   }
+// };
 
-export  default spotifySearchController;
+// export  default spotifySearchController;
 
 
 
 ///interface for jukebox
 export class JukeboxController {
   localQueue: Song[];
-  constructor(totalSize: number) {
+  constructor() {
     this.localQueue = [];
   }
   isSongPlaying(): boolean { return false;}
@@ -37,13 +37,13 @@ export class JukeboxController {
     console.log("Volume has been implemented");
   }
  
-  addToQueue(songName: Song): void{
-    this.localQueue.push(songName);
+  addToQueue(song: Song): void{
+    this.localQueue.push(song);
   }
-  // voteToSkip(): void{
-  //   //todo
-  // }
-
+  
+  removeFromQueue(): void{
+    this.localQueue.shift()
+  }
   async songSearch(req: Request, res: Response): Promise<Response>{
     const { query } = req.query;
 
@@ -69,5 +69,7 @@ export class JukeboxController {
   }
  
   voteToSkip(): void {}
+
+  
 
 }
