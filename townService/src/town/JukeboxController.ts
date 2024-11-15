@@ -3,29 +3,12 @@
 import { Request, Response } from 'express';
 import { searchSpotifyTracks } from '../services/JukeboxService';
 import { Song } from '../types/CoveyTownSocket';
-
-
-/** Controller for handling Spotify search requests */
-// const spotifySearchController = async (req: Request, res: Response): Promise<Response> => {
-//   const { query } = req.query;
-//   if (!query) {
-//     return res.status(400).json({ error: 'Query parameter is required' });
-//   }
-
-//   try {
-//     const searchResults = await searchSpotifyTracks(query as string);
-//     return res.json(searchResults);
-//   } catch (error) {
-//     return res.status(500).json({ error: 'Failed to fetch tracks from Spotify' });
-//   }
-// };
-
-// export  default spotifySearchController;
+import { none } from 'ramda';
 
 
 
 ///interface for jukebox
-export class JukeboxController {
+export default class JukeboxController {
   localQueue: Song[];
   constructor() {
     this.localQueue = [];
@@ -44,30 +27,10 @@ export class JukeboxController {
   removeFromQueue(): void{
     this.localQueue.shift()
   }
-  async songSearch(req: Request, res: Response): Promise<Response>{
-    const { query } = req.query;
-
-    // Check if the query parameter is provided
-    if (!query) {
-      return res.status(400).json({ error: 'Query parameter is required' });
-    }
-  
-    try {
-      // Perform search on Spotify with the provided query
-      const searchResults = await searchSpotifyTracks(query as string);
-      return res.json(searchResults); // Return the search results
-    } catch (error) {
-      // Handle any errors that may occur during the search
-      return res.status(500).json({ error: 'Failed to fetch tracks from Spotify' });
-    }
-
-  }
-
-  songQueue(): Song[] {
-    const songs: Song[] = [  ];
-    return songs;
-  }
- 
+  // async songSearch(query: String): Promise<SearchList[]>{
+   
+  // }
+ //todo
   voteToSkip(): void {}
 
   
