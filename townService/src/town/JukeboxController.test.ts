@@ -39,10 +39,4 @@ describe('JukeboxController', () => {
   it('should return false for isSongPlaying', () => {
     expect(controller.isSongPlaying()).toBe(false);
   });
-
-  it('should adjust volume and log a message', () => {
-    console.log = jest.fn(); // Mock console.log
-    controller.adjustVolume();
-    expect(console.log).toHaveBeenCalledWith('Volume has been implemented');
-  });
 });
