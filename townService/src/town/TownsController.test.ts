@@ -2,7 +2,13 @@ import assert from 'assert';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { Town } from '../api/Model';
-import { ConversationArea, Interactable, TownEmitter, ViewingArea } from '../types/CoveyTownSocket';
+import {
+  ConversationArea,
+  Interactable,
+  JukeboxArea,
+  TownEmitter,
+  ViewingArea,
+} from '../types/CoveyTownSocket';
 import TownsStore from '../lib/TownsStore';
 import {
   createConversationForTesting,
@@ -12,6 +18,7 @@ import {
   isViewingArea,
   isConversationArea,
   MockedPlayer,
+  isJukeboxArea,
 } from '../TestUtils';
 import { TownsController } from './TownsController';
 
@@ -353,6 +360,66 @@ describe('TownsController integration tests', () => {
         viewingArea.id = nanoid();
         await expect(
           controller.createViewingArea(testingTown.townID, sessionToken, viewingArea),
+        ).rejects.toThrow();
+      });
+    });
+
+    describe('[T2] Create Jukebox Area', () => {
+      it('Executes without error when creating a new jukebox area', async () => {
+        const jukeboxArea = interactables.find(isJukeboxArea) as JukeboxArea;
+        if (!jukeboxArea) {
+          fail('Expected at least one jukebox area to be returned in the initial join data');
+        } else {
+          const newJukeboxArea: JukeboxArea = {
+            id: jukeboxArea.id,
+            isPlaying: false,
+            queue: [],
+            volume: 0,
+            searchList: [],
+          };
+          await controller.createJukeboxArea(testingTown.townID, sessionToken, newJukeboxArea);
+          // Check to see that the jukebox area was successfully updated
+          const townEmitter = getBroadcastEmitterForTownID(testingTown.townID);
+          const updateMessage = getLastEmittedEvent(townEmitter, 'interactableUpdate');
+          if (isJukeboxArea(updateMessage)) {
+            expect(updateMessage).toEqual(newJukeboxArea);
+          } else {
+            fail('Expected an interactableUpdate to be dispatched with the new jukebox area');
+          }
+        }
+      });
+      it('Returns an error message if the town ID is invalid', async () => {
+        const jukeboxArea = interactables.find(isJukeboxArea) as JukeboxArea;
+        const newJukeboxArea: JukeboxArea = {
+          id: jukeboxArea.id,
+          isPlaying: false,
+          queue: [],
+          volume: 0,
+          searchList: [],
+        };
+        await expect(
+          controller.createJukeboxArea(nanoid(), sessionToken, newJukeboxArea),
+        ).rejects.toThrow();
+      });
+      it('Checks for a valid session token before creating a jukebox area', async () => {
+        const invalidSessionToken = nanoid();
+        const jukeboxArea = interactables.find(isJukeboxArea) as JukeboxArea;
+        const newJukeboxArea: JukeboxArea = {
+          id: jukeboxArea.id,
+          isPlaying: false,
+          queue: [],
+          volume: 0,
+          searchList: [],
+        };
+        await expect(
+          controller.createJukeboxArea(testingTown.townID, invalidSessionToken, newJukeboxArea),
+        ).rejects.toThrow();
+      });
+      it('Returns an error message if addJukeboxArea returns false', async () => {
+        const jukeboxArea = interactables.find(isJukeboxArea) as JukeboxArea;
+        jukeboxArea.id = nanoid();
+        await expect(
+          controller.createJukeboxArea(testingTown.townID, sessionToken, jukeboxArea),
         ).rejects.toThrow();
       });
     });
