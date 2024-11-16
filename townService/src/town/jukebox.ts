@@ -1,5 +1,3 @@
-import { JukeboxController } from "./JukeboxController";
+import JukeboxController from './JukeboxController';
 
-
-class jukebox extends JukeboxController {
-}
+class JukeBox extends JukeboxController {}
