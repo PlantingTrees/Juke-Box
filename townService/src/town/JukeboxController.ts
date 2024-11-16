@@ -1,35 +1,27 @@
-// src/controllers/JukeboxController.ts
-
-import { Request, Response } from 'express';
-import { searchSpotifyTracks } from '../services/JukeboxService';
 import { Song } from '../types/CoveyTownSocket';
-import { none } from 'ramda';
 
-
-
-///interface for jukebox
 export default class JukeboxController {
   localQueue: Song[];
+
   constructor() {
     this.localQueue = [];
   }
-  isSongPlaying(): boolean { return false;}
 
-  adjustVolume(volume: number): void{
-    const town_volume = volume;
-    console.log("Volume has been implemented");
+  // eslint-disable-next-line class-methods-use-this
+  public isSongPlaying(): boolean {
+    return false;
   }
- 
-  addToQueue(song: Song): void{
+
+  // eslint-disable-next-line class-methods-use-this
+  public adjustVolume(volume: number): void {}
+
+  addToQueue(song: Song): void {
     this.localQueue.push(song);
   }
-  
-  removeFromQueue(): void{
-    this.localQueue.shift()
+
+  public removeFromQueue(): void {
+    this.localQueue.shift();
   }
-  
-  voteToSkip(): void {}
 
-  
-
+  static voteToSkip(): void {}
 }
