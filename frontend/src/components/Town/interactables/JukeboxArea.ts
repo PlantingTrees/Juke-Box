@@ -42,9 +42,7 @@ export default class JukeboxArea extends Interactable {
     this._labelText?.setVisible(false);
     if (this._isInteracting) {
       this.townController.interactableEmitter.emit('continueInteracting', this);
-      console.log("I m still interracting wirh the juke bOx Area leave me alone please ")
       this._isInteracting = true;
-
     }
   }
 

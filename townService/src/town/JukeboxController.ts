@@ -13,9 +13,8 @@ export default class JukeboxController {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public adjustVolume(volume: number): void {
+  public adjustVolume(): void {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    volume = 1.0;
   }
 
   addToQueue(song: Song): void {

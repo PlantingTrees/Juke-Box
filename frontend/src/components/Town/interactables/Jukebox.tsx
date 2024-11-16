@@ -151,7 +151,6 @@ export default function JukeboxArea(): JSX.Element {
                         aria-label='Toggle mute'
                         onClick={() => setVolume(volume === 0 ? 50 : 0)}
                       />
-                      {/* this slide has to talk with a prgram, i am thinking either using a library to handle the logic such as react-player*/}
                       <Slider value={volume} onChange={setVolume} min={0} max={100} flex={1}>
                         <SliderTrack bg='green.100'>
                           <SliderFilledTrack bg='green.500' />

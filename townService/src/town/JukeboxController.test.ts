@@ -42,7 +42,7 @@ describe('JukeboxController', () => {
 
   it('should adjust volume and log a message', () => {
     console.log = jest.fn(); // Mock console.log
-    controller.adjustVolume(50);
+    controller.adjustVolume();
     expect(console.log).toHaveBeenCalledWith('Volume has been implemented');
   });
 });
