@@ -38,14 +38,16 @@ export default class JukeboxArea extends Interactable {
   }
 
   overlapExit(): void {
+    //this is  creates an effect whrere i can still listen to jukebox even afteer player leaves the area
     this._labelText?.setVisible(false);
     if (this._isInteracting) {
       this.townController.interactableEmitter.emit('continueInteracting', this);
+      this._isInteracting = true;
     }
   }
 
   interact(): void {
-    this._labelText?.setVisible(false);
+    this._labelText?.setVisible(true);
     this._isInteracting = true;
   }
 
