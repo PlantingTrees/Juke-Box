@@ -27,10 +27,7 @@ export default class JukeboxController {
   removeFromQueue(): void{
     this.localQueue.shift()
   }
-  // async songSearch(query: String): Promise<SearchList[]>{
-   
-  // }
- //todo
+  
   voteToSkip(): void {}
 
   
