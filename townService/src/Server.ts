@@ -39,9 +39,10 @@ app.use('/docs', swaggerUi.serve, async (_req: Express.Request, res: Express.Res
   return res.send(swaggerUi.generateHTML(JSON.parse(swaggerSpec)));
 });
 
+const jukeboxController = new JukeboxController();
 // Spotify API route - directly registered here
-app.get('/jukebox/search', JukeboxController);
-
+// app.get('/jukebox/votetoskip', jukeboxController.voteToSkip);
+app.get('/jukebox/addtoqueue', jukeboxController.addToQueue);
 // Register the TownsController routes with the express server
 RegisterRoutes(app);
 
