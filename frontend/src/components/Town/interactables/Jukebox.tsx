@@ -26,30 +26,22 @@ import {
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
+import { Song } from '../../../../../shared/types/CoveyTownSocket';
 
 export default function JukeboxArea(): JSX.Element {
   const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
   const coveyTownController = useTownController();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
   const [selectedSong, setSelectedSong] = useState<string | null>(null);
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [songImage, setSongImage] = useState('');
 
+  const [queueItems, setQueueItems] = useState<Song[]>([]);
+
   // TODO get queue data from users whose id is not the one playing the song, so if Kingsley plays song,
   // and Kevin wants to play a song kevin can only search the song but CANNOT interupt the song currently playing
-  const queueItems = [
-    { title: 'Young Thug - Be Me See Me', image: '/placeholder1.jpg', by: 'playerIDShouldGoHERE' },
-    {
-      title: 'Travis Scott - Never Catch Me',
-      image: '/placeholder2.jpg',
-      by: 'playerIDShouldGoHERE',
-    },
-    { title: 'Young Thug - Uncle M', image: '/placeholder3.jpg', by: 'playerIDShouldGoHERE' },
-  ];
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -62,20 +54,9 @@ export default function JukeboxArea(): JSX.Element {
       setIsOpen(true);
     }
   }, [jukeboxArea]);
-  //this had to call our backend, created some random data so that i can atleast test this son of a bitch
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    try {
-      const mockResults = [
-        `Results for: ${searchQuery}`,
-        'Young thug Be Me See Me',
-        'Travis Scott Never Catch Me',
-        'Young thug Uncle M',
-      ];
-      setSearchResults(mockResults);
-    } catch (error) {
-      console.error('Search failed:', error);
-    }
+
+  const addSongToQueue = (song: Song) => {
+    setQueueItems(prevQueue => [...prevQueue, song]);
   };
 
   return (
@@ -96,7 +77,7 @@ export default function JukeboxArea(): JSX.Element {
               <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 <GridItem>
                   <VStack spacing={4} align='stretch'>
-                    <JukeboxSearch />
+                    <JukeboxSearch setQueueItems={addSongToQueue} />
                     <HStack spacing={4} p={2} bg='gray.100' borderRadius='md'>
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
@@ -135,7 +116,7 @@ export default function JukeboxArea(): JSX.Element {
                               boxShadow='sm'
                               _hover={{ bg: 'gray.50' }}>
                               <Box w={2} h={2} borderRadius='full' bg='blue.500' />
-                              <Text flex={1}>{song.title}</Text>
+                              <Text flex={1}>{song.songName}</Text>
                             </HStack>
                           ))}
                         </VStack>

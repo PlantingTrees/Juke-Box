@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Song } from '../../../../types/CoveyTownSocket';
 import { Search } from 'lucide-react';
 import {
@@ -9,11 +9,18 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  useToast,
 } from '@chakra-ui/react';
 
-export default function JukeboxSearch(): JSX.Element {
+export default function JukeboxSearch({
+  setQueueItems,
+}: {
+  setQueueItems: (song: Song) => void;
+}): JSX.Element {
   const [results, setResults] = useState<Song[]>([]);
   const [query, setQuery] = useState('');
+
+  const jukeboxToast = useToast();
 
   const travisScottResult: Song = {
     songName: 'Never Catch Me',
@@ -82,6 +89,20 @@ export default function JukeboxSearch(): JSX.Element {
     }
   };
 
+  const addSong = useCallback(
+    async (song: Song) => {
+      try {
+        setQueueItems(song);
+      } catch (error) {
+        jukeboxToast({
+          description: `${error}`,
+          status: `error`,
+        });
+      }
+    },
+    [jukeboxToast, setQueueItems],
+  );
+
   return (
     <>
       <Box bg='gray.100' p={4} borderRadius='md'>
@@ -113,7 +134,13 @@ export default function JukeboxSearch(): JSX.Element {
       <Box flex={1} overflowY='auto' maxH='300px' borderRadius='md' bg='gray.50' p={2}>
         <VStack align='stretch' spacing={2}>
           {results.map((result, index) => (
-            <Box key={index} p={2} _hover={{ bg: 'gray.100' }} cursor='pointer' borderRadius='md'>
+            <Box
+              key={index}
+              p={2}
+              _hover={{ bg: 'gray.100' }}
+              cursor='pointer'
+              borderRadius='md'
+              onClick={() => addSong(result)}>
               <Text>
                 {result.songName} - {result.artistName} | {result.albumName}
               </Text>
