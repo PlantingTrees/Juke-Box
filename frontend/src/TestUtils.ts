@@ -7,6 +7,7 @@ import TownController, { TownEvents } from './classes/TownController';
 import ViewingAreaController from './classes/ViewingAreaController';
 import { TownsService } from './generated/client';
 import { CoveyTownSocket, ServerToClientEvents, TownJoinResponse } from './types/CoveyTownSocket';
+import JukeboxAreaController from './classes/JukeboxAreaController';
 
 //These types copied from socket.io server library so that we don't have to depend on the whole thing to have type-safe tests.
 type SocketReservedEventsMap = {
@@ -85,6 +86,7 @@ type MockedTownControllerProperties = {
   players?: PlayerController[];
   conversationAreas?: ConversationAreaController[];
   viewingAreas?: ViewingAreaController[];
+  jukeboxAreas?: JukeboxAreaController[];
 };
 export function mockTownController({
   friendlyName,
@@ -95,6 +97,7 @@ export function mockTownController({
   players,
   conversationAreas,
   viewingAreas,
+  jukeboxAreas,
 }: MockedTownControllerProperties) {
   const mockedController = mock<TownController>();
   if (friendlyName) {
@@ -122,6 +125,9 @@ export function mockTownController({
   }
   if (viewingAreas) {
     Object.defineProperty(mockedController, 'viewingAreas', { value: viewingAreas });
+  }
+  if (jukeboxAreas) {
+    Object.defineProperty(mockedController, 'jukeboxAreas', { value: jukeboxAreas });
   }
   return mockedController;
 }
@@ -164,6 +170,13 @@ export async function mockTownControllerConnection(
       id: nanoid(),
       topic: undefined,
       occupantsByID: [],
+    });
+    responseToSendController.interactables.push({
+      id: nanoid(),
+      isPlaying: false,
+      volume: 0,
+      queue: [],
+      searchList: [],
     });
     for (let i = 0; i < 10; i++) {
       const playerID = nanoid();

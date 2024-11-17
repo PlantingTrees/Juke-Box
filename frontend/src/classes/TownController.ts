@@ -319,7 +319,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     this.emit('viewingAreasChanged', newViewingAreas);
   }
 
-  public get jukeBoxAreas() {
+  public get jukeboxAreas() {
     return this._jukeboxAreas;
   }
 
@@ -531,19 +531,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   async createViewingArea(newArea: ViewingAreaModel) {
     await this._townsService.createViewingArea(this.townID, this.sessionToken, newArea);
   }
-
-  /**
-   * WE MAY OR MAY NOT NEED THIS!
-   * Create a new jukebox area, sending the request to the townService. Throws an error if the request
-   * is not successful. Does not immediately update local state about the new jukebox area - it will be
-   * updated once the townService creates the area and emits an interactableUpdate
-   *
-   * @param newArea
-   *
-   *async createJukeboxArea(newArea: JukeboxAreaModel) {
-   *  await this._townsService.createJukeboxArea(this.townID, this.sessionToken, newArea);
-   *}
-   */
 
   /**
    * Disconnect from the town, notifying the townService that we are leaving and returning
@@ -765,7 +752,7 @@ export function useJukeboxAreaController(jukeboxAreaID: string): JukeboxAreaCont
 
   const jukeboxArea = townController.jukeBoxAreas.find(eachArea => eachArea.id == jukeboxAreaID);
   if (!jukeboxArea) {
-    throw new Error(`Requested viewing area ${jukeboxAreaID} does not exist`);
+    throw new Error(`Requested jukebox area ${jukeboxAreaID} does not exist`);
   }
   return jukeboxArea;
 }
