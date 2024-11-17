@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
-import { Search, Music, Volume2, VolumeX } from 'lucide-react';
+import { Music, Volume2, VolumeX } from 'lucide-react';
 import { useInteractable } from '../../../classes/TownController';
 import {
   Modal,
@@ -10,9 +10,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalContent,
-  Input,
-  InputGroup,
-  InputRightElement,
   IconButton,
   VStack,
   Box,
@@ -28,10 +25,12 @@ import {
   GridItem,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
+import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 
 export default function JukeboxArea(): JSX.Element {
   const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
   const coveyTownController = useTownController();
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -97,54 +96,7 @@ export default function JukeboxArea(): JSX.Element {
               <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 <GridItem>
                   <VStack spacing={4} align='stretch'>
-                    <Box bg='gray.100' p={4} borderRadius='md'>
-                      <InputGroup size='md'>
-                        <Input
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          placeholder='Search for songs...'
-                          bg='white'
-                          onKeyPress={e => {
-                            if (e.key === 'Enter') {
-                              handleSearch();
-                            }
-                          }}
-                        />
-                        <InputRightElement>
-                          <IconButton
-                            icon={<Search size={20} />}
-                            aria-label='Search'
-                            size='sm'
-                            variant='ghost'
-                            onClick={handleSearch}
-                            _hover={{ bg: 'gray.200' }}
-                          />
-                        </InputRightElement>
-                      </InputGroup>
-                    </Box>
-
-                    <Box
-                      flex={1}
-                      overflowY='auto'
-                      maxH='300px'
-                      borderRadius='md'
-                      bg='gray.50'
-                      p={2}>
-                      <VStack align='stretch' spacing={2}>
-                        {searchResults.map((result, index) => (
-                          <Box
-                            key={index}
-                            p={2}
-                            _hover={{ bg: 'gray.100' }}
-                            cursor='pointer'
-                            borderRadius='md'
-                            onClick={() => setSelectedSong(result)}>
-                            <Text>{result}</Text>
-                          </Box>
-                        ))}
-                      </VStack>
-                    </Box>
-
+                    <JukeboxSearch />
                     <HStack spacing={4} p={2} bg='gray.100' borderRadius='md'>
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
