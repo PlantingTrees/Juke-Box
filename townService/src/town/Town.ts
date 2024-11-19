@@ -4,7 +4,7 @@ import { BroadcastOperator } from 'socket.io';
 import IVideoClient from '../lib/IVideoClient';
 import Player from '../lib/Player';
 import TwilioVideo from '../lib/TwilioVideo';
-import { isViewingArea } from '../TestUtils';
+import { isJukeboxArea, isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
@@ -148,13 +148,22 @@ export default class Town {
     // corresponds to the interactable being updated. Does not throw an error if
     // the specified viewing area does not exist.
     socket.on('interactableUpdate', (update: Interactable) => {
-      if (isViewingArea(update)) {
+      if (isViewingArea(update) && !isJukeboxArea(update)) {
         newPlayer.townEmitter.emit('interactableUpdate', update);
         const viewingArea = this._interactables.find(
           eachInteractable => eachInteractable.id === update.id,
         );
         if (viewingArea) {
           (viewingArea as ViewingArea).updateModel(update);
+        }
+      }
+      if (isJukeboxArea(update)) {
+        newPlayer.townEmitter.emit('interactableUpdate', update);
+        const jukeboxArea = this._interactables.find(
+          eachInteractable => eachInteractable.id === update.id,
+        );
+        if (jukeboxArea) {
+          (jukeboxArea as JukeboxArea).updateModel(update);
         }
       }
     });

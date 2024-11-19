@@ -16,11 +16,13 @@ import {
   PlayerLocation,
   ServerToClientEvents,
   TownJoinResponse,
+  JukeboxArea as JukeboxAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isViewingArea } from '../types/TypeUtils';
+import { isConversationArea, isJukeboxArea, isViewingArea } from '../types/TypeUtils';
 import PlayerController from './PlayerController';
 import TownController, { TownEvents } from './TownController';
 import ViewingAreaController from './ViewingAreaController';
+import JukeboxAreaController from './JukeboxAreaController';
 
 /**
  * Mocks the socket-io client constructor such that it will always return the same
@@ -349,8 +351,9 @@ describe('TownController', () => {
       describe('Viewing Area updates', () => {
         function viewingAreaOnTown() {
           return {
-            ...(townJoinResponse.interactables.find(eachInteractable =>
-              isViewingArea(eachInteractable),
+            ...(townJoinResponse.interactables.find(
+              eachInteractable =>
+                isViewingArea(eachInteractable) && !isJukeboxArea(eachInteractable),
             ) as ViewingArea),
           };
         }
@@ -400,6 +403,84 @@ describe('TownController', () => {
           viewingArea.video = nanoid();
           eventListener(viewingArea);
           expect(listener).toBeCalledWith(viewingArea.video);
+        });
+      });
+      describe('Jukebox Area updates', () => {
+        function jukeboxAreaOnTown() {
+          return {
+            ...(townJoinResponse.interactables.find(eachInteractable =>
+              isJukeboxArea(eachInteractable),
+            ) as JukeboxAreaModel),
+          };
+        }
+        let jukeboxArea: JukeboxAreaModel;
+        let jukeboxAreaController: JukeboxAreaController;
+        let eventListener: (update: JukeboxAreaModel) => void;
+        beforeEach(() => {
+          jukeboxArea = jukeboxAreaOnTown();
+          const controller = testController.jukeboxAreas.find(
+            eachArea => eachArea.id === jukeboxArea.id,
+          );
+          if (!controller) {
+            throw new Error(
+              `Could not find jukebox area controller for jukebox area ${jukeboxArea.id}`,
+            );
+          }
+          jukeboxAreaController = controller;
+          eventListener = getEventListener(mockSocket, 'interactableUpdate');
+        });
+        it('Updates the jukebox area model', () => {
+          jukeboxArea.volume++;
+          jukeboxArea.queue = [
+            ...jukeboxArea.queue,
+            {
+              songName: 'Never Catch Me',
+              songDurationSec: 176160,
+              albumName: 'Rodeo',
+              artistName: 'Travis Scott',
+              artworkUrl: 'https://i.scdn.co/image/ab67616d0000b2736cfd9a7353f98f5165ea6160',
+              trackUri: 'spotify:track:3jg8bevUzKYONDLBBQquif',
+            },
+          ];
+          jukeboxArea.isPlaying = !jukeboxArea.isPlaying;
+
+          eventListener(jukeboxArea);
+
+          expect(jukeboxAreaController.toInteractableModel()).toEqual(jukeboxArea);
+        });
+        it('Emits a currentlyPlaying event if isPlaying changes', () => {
+          const listener = jest.fn();
+          jukeboxAreaController.addListener('currentlyPlaying', listener);
+
+          jukeboxArea.isPlaying = !jukeboxArea.isPlaying;
+          eventListener(jukeboxArea);
+          expect(listener).toBeCalledWith(jukeboxArea.isPlaying);
+        });
+        it('Emits a volumeLevelChanged event if the volume changes', () => {
+          const listener = jest.fn();
+          jukeboxAreaController.addListener('volumeLevelChanged', listener);
+
+          jukeboxArea.volume++;
+          eventListener(jukeboxArea);
+          expect(listener).toBeCalledWith(jukeboxArea.volume);
+        });
+        it('Emits a songsAdded event if the queue changes', () => {
+          const listener = jest.fn();
+          jukeboxAreaController.addListener('songsAdded', listener);
+
+          jukeboxArea.queue = [
+            ...jukeboxArea.queue,
+            {
+              songName: 'Never Catch Me',
+              songDurationSec: 176160,
+              albumName: 'Rodeo',
+              artistName: 'Travis Scott',
+              artworkUrl: 'https://i.scdn.co/image/ab67616d0000b2736cfd9a7353f98f5165ea6160',
+              trackUri: 'spotify:track:3jg8bevUzKYONDLBBQquif',
+            },
+          ];
+          eventListener(jukeboxArea);
+          expect(listener).toBeCalledWith(jukeboxArea.queue);
         });
       });
     });

@@ -46,8 +46,8 @@ export async function searchSpotifyTracks(query: string): Promise<Song[]> {
     });
     // Map the Spotify response to an array of Song objects
     return response.data.tracks.items.map((track: SpotifyTrack) => ({
-      trackName: track.name,
-      trackDuration: track.duration_ms,
+      songName: track.name,
+      songDurationSec: track.duration_ms,
       albumName: track.album.name,
       artistName: track.artists[0].name,
       artworkUrl: track.album.images[0]?.url || '',

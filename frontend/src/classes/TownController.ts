@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import TypedEmitter from 'typed-emitter';
 import Interactable from '../components/Town/Interactable';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
+import JukeboxArea from '../components/Town/interactables/JukeboxArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
@@ -15,11 +16,13 @@ import {
   PlayerLocation,
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
+  // JukeboxArea as JukeboxAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isViewingArea } from '../types/TypeUtils';
+import { isConversationArea, isJukeboxArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './ConversationAreaController';
 import PlayerController from './PlayerController';
 import ViewingAreaController from './ViewingAreaController';
+import JukeboxAreaController from './JukeboxAreaController';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY = 300;
 
@@ -69,6 +72,11 @@ export type TownEvents = {
    * the town controller's record of viewing areas.
    */
   viewingAreasChanged: (newViewingAreas: ViewingAreaController[]) => void;
+  /**
+   * An event that indicates that the set of jukebox areas has changed. This event is emitted after updating
+   * the town controller's recorf of the jukebox areas.
+   */
+  jukeboxAreasChanged: (newJukeboxAreas: JukeboxAreaController[]) => void;
   /**
    * An event that indicates that a new chat message has been received, which is the parameter passed to the listener
    */
@@ -190,6 +198,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   private _viewingAreas: ViewingAreaController[] = [];
 
+  private _jukeboxAreas: JukeboxAreaController[] = [];
+
   public constructor({ userName, townID, loginController }: ConnectionProperties) {
     super();
     this._townID = townID;
@@ -309,6 +319,15 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     this.emit('viewingAreasChanged', newViewingAreas);
   }
 
+  public get jukeboxAreas() {
+    return this._jukeboxAreas;
+  }
+
+  public set jukeboxAreas(newJukeboxAreas: JukeboxAreaController[]) {
+    this._jukeboxAreas = newJukeboxAreas;
+    this.emit('jukeboxAreasChanged', newJukeboxAreas);
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -422,11 +441,16 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             this.emit('conversationAreasChanged', this._conversationAreasInternal);
           }
         }
-      } else if (isViewingArea(interactable)) {
+      } else if (isViewingArea(interactable) && !isJukeboxArea(interactable)) {
         const updatedViewingArea = this._viewingAreas.find(
           eachArea => eachArea.id === interactable.id,
         );
         updatedViewingArea?.updateFrom(interactable);
+      } else if (isJukeboxArea(interactable)) {
+        const updatedJukeboxArea = this._jukeboxAreas.find(
+          eachArea => eachArea.id === interactable.id,
+        );
+        updatedJukeboxArea?.updateFrom(interactable);
       }
     });
   }
@@ -540,6 +564,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
         this._conversationAreas = [];
         this._viewingAreas = [];
+        this._jukeboxAreas = [];
         initialData.interactables.forEach(eachInteractable => {
           if (isConversationArea(eachInteractable)) {
             this._conversationAreasInternal.push(
@@ -548,8 +573,10 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
                 this._playersByIDs.bind(this),
               ),
             );
-          } else if (isViewingArea(eachInteractable)) {
+          } else if (isViewingArea(eachInteractable) && !isJukeboxArea(eachInteractable)) {
             this._viewingAreas.push(new ViewingAreaController(eachInteractable));
+          } else if (isJukeboxArea(eachInteractable)) {
+            this._jukeboxAreas.push(new JukeboxAreaController(eachInteractable));
           }
         });
         this._userID = initialData.userID;
@@ -588,12 +615,46 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   }
 
   /**
+   * Retrieve the jukebox area controller that corresponds to a jukeboxAreaModel, creating one if necessary
+   *
+   * @param jukeboxArea
+   * @returns
+   */
+  public getJukeboxAreaController(jukeboxArea: JukeboxArea): JukeboxAreaController {
+    const existingController = this._jukeboxAreas.find(
+      eachExistingArea => eachExistingArea.id === jukeboxArea.name,
+    );
+    if (existingController) {
+      return existingController;
+    } else {
+      const newController = new JukeboxAreaController({
+        id: jukeboxArea.name,
+        isPlaying: false,
+        queue: [],
+        volume: 0,
+        searchList: [],
+      });
+      this._jukeboxAreas.push(newController);
+      return newController;
+    }
+  }
+
+  /**
    * Emit a viewing area update to the townService
    * @param viewingArea The Viewing Area Controller that is updated and should be emitted
    *    with the event
    */
   public emitViewingAreaUpdate(viewingArea: ViewingAreaController) {
     this._socket.emit('interactableUpdate', viewingArea.viewingAreaModel());
+  }
+
+  /**
+   * Emit a jukebox area update to the townService
+   * @param jukeboxArea The Viewing Area Controller that is updated and should be emitted
+   *    with the event
+   */
+  public emitJukeboxAreaUpdate(jukeboxArea: JukeboxAreaController) {
+    this._socket.emit('interactableUpdate', jukeboxArea.toInteractableModel());
   }
 
   /**
@@ -673,6 +734,27 @@ export function useViewingAreaController(viewingAreaID: string): ViewingAreaCont
     throw new Error(`Requested viewing area ${viewingAreaID} does not exist`);
   }
   return viewingArea;
+}
+
+/**
+ * A react hook to retrieve a jukebox area controller.
+ *
+ * This function will throw an error if the jukebox area controller does not exist.
+ *
+ * This hook relies on the TownControllerContext.
+ *
+ * @param jukeboxAreaID The ID of the jukebox area to retrieve the controller for
+ *
+ * @throws Error if there is no jukebox area controller matching the specifeid ID
+ */
+export function useJukeboxAreaController(jukeboxAreaID: string): JukeboxAreaController {
+  const townController = useTownController();
+
+  const jukeboxArea = townController.jukeboxAreas.find(eachArea => eachArea.id == jukeboxAreaID);
+  if (!jukeboxArea) {
+    throw new Error(`Requested jukebox area ${jukeboxAreaID} does not exist`);
+  }
+  return jukeboxArea;
 }
 
 /**
