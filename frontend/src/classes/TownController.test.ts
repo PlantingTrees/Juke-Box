@@ -351,8 +351,9 @@ describe('TownController', () => {
       describe('Viewing Area updates', () => {
         function viewingAreaOnTown() {
           return {
-            ...(townJoinResponse.interactables.find(eachInteractable =>
-              isViewingArea(eachInteractable),
+            ...(townJoinResponse.interactables.find(
+              eachInteractable =>
+                isViewingArea(eachInteractable) && !isJukeboxArea(eachInteractable),
             ) as ViewingArea),
           };
         }
@@ -445,7 +446,7 @@ describe('TownController', () => {
 
           eventListener(jukeboxArea);
 
-          expect(jukeboxAreaController.toInteractableModel).toEqual(jukeboxArea);
+          expect(jukeboxAreaController.toInteractableModel()).toEqual(jukeboxArea);
         });
         it('Emits a currentlyPlaying event if isPlaying changes', () => {
           const listener = jest.fn();

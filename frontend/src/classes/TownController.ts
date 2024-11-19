@@ -323,7 +323,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return this._jukeboxAreas;
   }
 
-  public set jukeBoxAreas(newJukeboxAreas: JukeboxAreaController[]) {
+  public set jukeboxAreas(newJukeboxAreas: JukeboxAreaController[]) {
     this._jukeboxAreas = newJukeboxAreas;
     this.emit('jukeboxAreasChanged', newJukeboxAreas);
   }
@@ -441,7 +441,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             this.emit('conversationAreasChanged', this._conversationAreasInternal);
           }
         }
-      } else if (isViewingArea(interactable)) {
+      } else if (isViewingArea(interactable) && !isJukeboxArea(interactable)) {
         const updatedViewingArea = this._viewingAreas.find(
           eachArea => eachArea.id === interactable.id,
         );
@@ -573,7 +573,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
                 this._playersByIDs.bind(this),
               ),
             );
-          } else if (isViewingArea(eachInteractable)) {
+          } else if (isViewingArea(eachInteractable) && !isJukeboxArea(eachInteractable)) {
             this._viewingAreas.push(new ViewingAreaController(eachInteractable));
           } else if (isJukeboxArea(eachInteractable)) {
             this._jukeboxAreas.push(new JukeboxAreaController(eachInteractable));
@@ -750,7 +750,7 @@ export function useViewingAreaController(viewingAreaID: string): ViewingAreaCont
 export function useJukeboxAreaController(jukeboxAreaID: string): JukeboxAreaController {
   const townController = useTownController();
 
-  const jukeboxArea = townController.jukeBoxAreas.find(eachArea => eachArea.id == jukeboxAreaID);
+  const jukeboxArea = townController.jukeboxAreas.find(eachArea => eachArea.id == jukeboxAreaID);
   if (!jukeboxArea) {
     throw new Error(`Requested jukebox area ${jukeboxAreaID} does not exist`);
   }
