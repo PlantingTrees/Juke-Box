@@ -36,6 +36,7 @@
     "linkify-it": "^4.0.1",
     "lodash": "^4.17.21",
     "lodash.throttle": "^4.1.1",
+    "lucide-react": "^0.460.0",
     "nanoid": "^4.0.0",
     "next": "^12.3.4",
     "phaser": "^3.60.0",
