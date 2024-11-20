@@ -79,7 +79,6 @@ export default function JukeboxArea(): JSX.Element {
             closeModal();
             coveyTownController.unPause();
           }}
-          
           size='2xl'>
           <ModalOverlay />
           <ModalContent maxW='900px'>
