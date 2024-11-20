@@ -193,16 +193,25 @@ export default function JukeboxArea(): JSX.Element {
                         display='flex'
                         justifyContent='center'
                         alignItems='center'>
-                        {selectedSong ? (
-                          <Box textAlign='center'>
+                        {queueItems.length > 0 ? (
+                          <Box textAlign='center' width='fit-content' mx='auto'>
+                            <Text fontSize='lg' fontWeight='bold' mb={2}>
+                              Currently Playing:
+                            </Text>
                             <Image
-                              src={songImage || '/mySongAPIPlaceHolder.png/.jpg'}
+                              src={queueItems[0]?.artworkUrl || '/mySongAPIPlaceHolder.png'}
                               alt='Song artwork'
                               boxSize='200px'
                               objectFit='cover'
                               borderRadius='md'
+                              mx='auto'
                             />
-                            <Text mt={2}>{selectedSong}</Text>
+                            <Text mt={2} fontSize='md' fontWeight='semibold' textAlign='center'>
+                              {queueItems[0]?.songName}
+                            </Text>
+                            <Text mt={1} fontSize='sm' color='gray.600' textAlign='center'>
+                              by {queueItems[0]?.artistName}
+                            </Text>
                           </Box>
                         ) : (
                           <Music size={64} color='#1a365d' />
