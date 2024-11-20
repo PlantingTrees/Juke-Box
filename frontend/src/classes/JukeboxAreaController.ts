@@ -7,6 +7,9 @@ export type JukeboxAreaEvents = {
   currentlyPlaying: (isPlaying: boolean) => void;
   playerSearch: (search: Song[]) => void;
   volumeLevelChanged: (level: number) => void;
+  // when user search has been changed MUST only be executed if and only if currentlyPlaying's isPlaying is false,
+  // wait your damn turn
+  onSongSearchChange: (newSearchQuery: string | undefined) => void;
 };
 
 export default class JukeboxAreaController extends (EventEmitter as new () => TypedEventEmitter<JukeboxAreaEvents>) {
@@ -69,6 +72,20 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
     }
   }
 
+  public get searchQuery() {
+    return this._model.searchQuery;
+  }
+
+  public set searchQuery(query: string | undefined) {
+    if (this._model.isPlaying === true) {
+      //wait your turn
+      console.log('You MUST wait your turn to set song...');
+    } else if (this._model.searchQuery !== query) {
+      this._model.searchQuery = query;
+      this.emit('onSongSearchChange', query);
+    }
+  }
+
   public get numOfSongs() {
     if (this._model.queue) {
       return this._model.queue.length;
@@ -77,14 +94,33 @@ export default class JukeboxAreaController extends (EventEmitter as new () => Ty
     return 0;
   }
 
+  /**
+   * @returns JukeBoxAreaModel that represents the current state of this ViewingAreaController
+   */
+  public JukeBoxAreaModel(): JukeboxAreaModel {
+    return this._model;
+  }
+
   public updateFrom(newModel: JukeboxAreaModel): void {
+    // this is how coveyTown socket interface for jukeBox updates jukeBoxController...
     this.results = newModel.searchList;
     this.volume = newModel.volume;
     this.songs = newModel.queue;
     this.isPlaying = newModel.isPlaying;
+    // may not be necessary, however it is nice to see the result of what you searched for...
+    // this way it can be rerendered to a react component
+    this.searchQuery = newModel.searchQuery;
   }
 
   public toInteractableModel(): JukeboxAreaModel {
-    return this._model;
+    // this is how the jukeBoxController send the data from this class controller to the coveyTown socket interface for jukeBox
+    return {
+      id: this._model.id,
+      isPlaying: this._model.isPlaying,
+      queue: this._model.queue,
+      searchList: this._model.searchList,
+      volume: this._model.volume,
+      searchQuery: this._model.searchQuery,
+    };
   }
 }

@@ -569,6 +569,13 @@
                  "height":195.333333333333,
                  "id":40,
                  "name":"Jukebox",
+                 "properties":[
+                     {
+                            "name":"searchQuery",
+                            "type":"string",
+                            "value":"KwengFace 10years"
+                     }
+                 ],
                  "rotation":0,
                  "type":"JukeboxArea",
                  "visible":true,
