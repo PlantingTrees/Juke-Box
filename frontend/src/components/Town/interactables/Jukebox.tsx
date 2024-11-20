@@ -82,7 +82,8 @@ export default function JukeboxArea(): JSX.Element {
             closeModal();
             coveyTownController.unPause();
           }}
-          size='4xl'>
+          
+          size='2xl'>
           <ModalOverlay />
           <ModalContent
             bg='linear-gradient(135deg, #1f1f1f, #282828)'
