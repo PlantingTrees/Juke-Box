@@ -23,6 +23,9 @@ import {
   Text,
   Grid,
   GridItem,
+  Spinner,
+  Select,
+  Progress,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
@@ -33,20 +36,18 @@ export default function JukeboxArea(): JSX.Element {
   const coveyTownController = useTownController();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<string | null>(null);
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
-  const [songImage, setSongImage] = useState('');
-
   const [queueItems, setQueueItems] = useState<Song[]>([]);
-
-  // TODO get queue data from users whose id is not the one playing the song, so if Kingsley plays song,
-  // and Kevin wants to play a song kevin can only search the song but CANNOT interupt the song currently playing
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentSongProgress, setCurrentSongProgress] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
       coveyTownController.interactEnd(jukeboxArea);
     }
+    setIsOpen(false);
   }, [coveyTownController, jukeboxArea]);
 
   useEffect(() => {
@@ -56,8 +57,17 @@ export default function JukeboxArea(): JSX.Element {
   }, [jukeboxArea]);
 
   const addSongToQueue = (song: Song) => {
-    setQueueItems(prevQueue => [...prevQueue, song]);
+    setQueueItems((prevQueue) => [...prevQueue, song]);
   };
+
+  useEffect(() => {
+    if (queueItems.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSongProgress((prev) => (prev >= 100 ? 0 : prev + 1));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [queueItems]);
 
   return (
     <>
@@ -68,108 +78,153 @@ export default function JukeboxArea(): JSX.Element {
             closeModal();
             coveyTownController.unPause();
           }}
-          size='2xl'>
+          size="4xl"
+        >
           <ModalOverlay />
-          <ModalContent maxW='900px'>
-            <ModalHeader>Juke Box</ModalHeader>
-            <ModalCloseButton />
+          <ModalContent
+            bg="linear-gradient(135deg, #1f1f1f, #282828)"
+            color="white"
+            borderRadius="lg"
+            p={6}
+            maxWidth="1200px"
+            boxShadow="xl"
+          >
+            <ModalHeader fontSize="2xl" fontWeight="bold" borderBottom="1px solid gray">
+              Covey.Town Jukebox
+            </ModalHeader>
+            <ModalCloseButton color="white" />
             <ModalBody>
-              <Grid templateColumns='repeat(2, 1fr)' gap={6}>
+              <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                {/* Left Panel: Search and Volume */}
                 <GridItem>
-                  <VStack spacing={4} align='stretch'>
-                    <JukeboxSearch setQueueItems={addSongToQueue} />
-                    <HStack spacing={4} p={2} bg='gray.100' borderRadius='md'>
+                  <VStack spacing={6} align="stretch">
+                    <Box bg="gray.800" p={4} borderRadius="lg" color={'black'}>
+                      {isLoading ? (
+                        <Spinner size="lg" color="teal" />
+                      ) : (
+                        <JukeboxSearch setQueueItems={addSongToQueue} />
+                      )}
+                    </Box>
+                    <HStack spacing={4} p={4} bg="gray.800" borderRadius="lg" alignItems="center">
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
-                        aria-label='Toggle mute'
+                        aria-label="Toggle mute"
                         onClick={() => setVolume(volume === 0 ? 50 : 0)}
+                        size="lg"
+                        bg="gray.700"
+                        _hover={{ bg: 'gray.600' }}
                       />
-                      <Slider value={volume} onChange={setVolume} min={0} max={100} flex={1}>
-                        <SliderTrack bg='green.100'>
-                          <SliderFilledTrack bg='green.500' />
+                      <Slider
+                        value={volume}
+                        onChange={setVolume}
+                        min={0}
+                        max={100}
+                        flex={1}
+                        aria-label="Volume Slider"
+                      >
+                        <SliderTrack bg="gray.600">
+                          <SliderFilledTrack bg="teal.400" />
                         </SliderTrack>
-                        <SliderThumb />
+                        <SliderThumb boxSize={4} />
                       </Slider>
                     </HStack>
                   </VStack>
                 </GridItem>
 
+                {/* Right Panel: Current Song or Queue */}
                 <GridItem>
-                  <VStack spacing={4} height='100%'>
+                  <VStack spacing={6} align="stretch">
                     {isQueueVisible ? (
-                      // Queue View
-                      <Box width='100%'>
-                        <VStack
-                          spacing={3}
-                          align='stretch'
-                          bg='gray.50'
-                          p={4}
-                          borderRadius='md'
-                          height='300px'
-                          overflowY='auto'>
-                          {queueItems.map((song, index) => (
+                      <Box
+                        bg="gray.800"
+                        borderRadius="lg"
+                        p={4}
+                        maxHeight="350px"
+                        overflowY="auto"
+                      >
+                        {queueItems.length > 0 ? (
+                          queueItems.map((song, index) => (
                             <HStack
                               key={index}
+                              spacing={4}
                               p={3}
-                              bg='white'
-                              borderRadius='md'
-                              boxShadow='sm'
-                              _hover={{ bg: 'gray.50' }}>
-                              <Box w={2} h={2} borderRadius='full' bg='blue.500' />
-                              <Text flex={1}>{song.songName}</Text>
+                              borderRadius="md"
+                              bg="gray.700"
+                              _hover={{ bg: 'gray.600' }}
+                              alignItems="center"
+                            >
+                              <Box
+                                w="10px"
+                                h="10px"
+                                borderRadius="full"
+                                bg={index === 0 ? 'green.400' : 'blue.400'}
+                              />
+                              <Text fontSize="lg" fontWeight="bold" flex={1}>
+                                {song.songName} - {song.artistName}
+                              </Text>
+                              <Text fontSize="sm" color="gray.400">
+                                {`Wait time: ${index * 3} min`}
+                              </Text>
                             </HStack>
-                          ))}
-                        </VStack>
+                          ))
+                        ) : (
+                          <Text>No songs in the queue yet!</Text>
+                        )}
                       </Box>
                     ) : (
-                      // Song View
                       <Box
-                        bg='gray.200'
-                        width='100%'
-                        height='300px'
-                        borderRadius='md'
-                        display='flex'
-                        justifyContent='center'
-                        alignItems='center'>
+                        bg="gray.800"
+                        borderRadius="lg"
+                        p={6}
+                        textAlign="center"
+                        height="350px"
+                        display="flex"
+                        flexDirection="column"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
                         {queueItems.length > 0 ? (
-                          <Box textAlign='center' width='fit-content' mx='auto'>
-                            <Text fontSize='lg' fontWeight='bold' mb={2}>
-                              Currently Playing:
-                            </Text>
+                          <>
                             <Image
-                              src={queueItems[0]?.artworkUrl || '/mySongAPIPlaceHolder.png'}
-                              alt='Song artwork'
-                              boxSize='200px'
-                              objectFit='cover'
-                              borderRadius='md'
-                              mx='auto'
+                              src={queueItems[0]?.artworkUrl || '/placeholder.png'}
+                              alt="Song artwork"
+                              boxSize="200px"
+                              objectFit="cover"
+                              borderRadius="md"
                             />
-                            <Text mt={2} fontSize='md' fontWeight='semibold' textAlign='center'>
+                            <Text mt={4} fontSize="xl" fontWeight="bold">
                               {queueItems[0]?.songName}
                             </Text>
-                            <Text mt={1} fontSize='sm' color='gray.600' textAlign='center'>
+                            <Text fontSize="lg" color="gray.400">
                               by {queueItems[0]?.artistName}
                             </Text>
-                          </Box>
+                            <Progress
+                              value={currentSongProgress}
+                              size="sm"
+                              colorScheme="teal"
+                              width="100%"
+                              mt={4}
+                            />
+                          </>
                         ) : (
-                          <Music size={64} color='#1a365d' />
+                          <Music size={64} color="teal" />
                         )}
                       </Box>
                     )}
-
                     <Button
                       onClick={() => setIsQueueVisible(!isQueueVisible)}
-                      variant='solid'
-                      colorScheme='green'
-                      width='100%'
-                      size='lg'>
-                      {isQueueVisible ? 'SHOW SONG' : 'SHOW QUEUE'}
+                      variant="solid"
+                      colorScheme="teal"
+                      size="lg"
+                      width="100%"
+                    >
+                      {isQueueVisible ? 'Show Song' : 'Show Queue'}
                     </Button>
                   </VStack>
                 </GridItem>
               </Grid>
             </ModalBody>
-            <ModalFooter />
+            <ModalFooter borderTop="1px solid gray" />
           </ModalContent>
         </Modal>
       )}
