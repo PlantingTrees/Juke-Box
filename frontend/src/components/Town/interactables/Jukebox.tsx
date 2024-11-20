@@ -24,7 +24,6 @@ import {
   Grid,
   GridItem,
   Spinner,
-  Select,
   Progress,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
@@ -41,7 +40,6 @@ export default function JukeboxArea(): JSX.Element {
   const [queueItems, setQueueItems] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSongProgress, setCurrentSongProgress] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -174,6 +172,9 @@ export default function JukeboxArea(): JSX.Element {
                         alignItems='center'>
                         {queueItems.length > 0 ? (
                           <>
+                            <Text fontSize='lg' fontWeight='bold' mb={2}>
+                              Currently Playing:
+                            </Text>
                             <Image
                               src={queueItems[0]?.artworkUrl || '/placeholder.png'}
                               alt='Song artwork'
@@ -187,13 +188,6 @@ export default function JukeboxArea(): JSX.Element {
                             <Text fontSize='lg' color='gray.400'>
                               by {queueItems[0]?.artistName}
                             </Text>
-                            <Progress
-                              value={currentSongProgress}
-                              size='sm'
-                              colorScheme='teal'
-                              width='100%'
-                              mt={4}
-                            />
                           </>
                         ) : (
                           <Music size={64} color='teal' />
