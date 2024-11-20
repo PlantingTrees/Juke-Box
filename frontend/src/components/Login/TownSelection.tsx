@@ -179,6 +179,9 @@ export default function TownSelection(): JSX.Element {
     // Check if the user is already logged into Spotify (e.g., look for token in URL or localStorage)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
     if (hashParams.has('access_token')) {
+      const token = hashParams.get('access_token');
+      if (!token) console.log('bad token');
+      localStorage.setItem('spotify-access-token', token!);
       setIsSpotifyLoggedIn(true); // Update state if the user is logged in
     }
   }, []);

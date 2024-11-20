@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome", // or "msedge" if using Microsoft Edge
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:3000", // adjust to your app's URL
+            "webRoot": "${workspaceFolder}/frontend", // point to the frontend directory
+           
+        }
+    ]
+}
