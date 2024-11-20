@@ -11,6 +11,7 @@ import {
   IconButton,
   useToast,
 } from '@chakra-ui/react';
+import axios from 'axios';
 
 export default function JukeboxSearch({
   setQueueItems,
@@ -19,80 +20,31 @@ export default function JukeboxSearch({
 }): JSX.Element {
   const [results, setResults] = useState<Song[]>([]);
   const [query, setQuery] = useState('');
-
   const jukeboxToast = useToast();
 
-  const travisScottResult: Song = {
-    songName: 'Never Catch Me',
-    songDurationSec: 176160,
-    albumName: 'Rodeo',
-    artistName: 'Travis Scott',
-    artworkUrl: 'https://i.scdn.co/image/ab67616d0000b2736cfd9a7353f98f5165ea6160',
-    trackUri: 'spotify:track:3jg8bevUzKYONDLBBQquif',
-  };
-
-  const uncleMResult: Song[] = [
-    {
-      songName: 'Uncle M',
-      songDurationSec: 140000,
-      albumName: 'BUSINESS IS BUSINESS',
-      artistName: 'Young Thug',
-      artworkUrl: 'https://i.scdn.co/image/ab67616d0000b27337895eee206eabf2682e3064',
-      trackUri: 'spotify:track:612Gkl43RQdwlzKGPgkudm',
-    },
-    {
-      songName: 'Uncle M',
-      songDurationSec: 140000,
-      albumName: "BUSINESS IS BUSINESS (Metro's Version)",
-      artistName: 'Young Thug',
-      artworkUrl: 'https://i.scdn.co/image/ab67616d0000b273316d28de9974e2f39636288c',
-      trackUri: 'spotify:track:2BR4cE9udCDcvZ2HtuLv3N',
-    },
-    {
-      songName: 'Far From Lies',
-      songDurationSec: 208810,
-      albumName: 'Now Or Never',
-      artistName: 'Unclekamo',
-      artworkUrl: 'https://i.scdn.co/image/ab67616d0000b273e0670854e8b9e3fae5d44bb2',
-      trackUri: 'spotify:track:3z11aKXKMHll56LO6iNI6A',
-    },
-    {
-      songName: 'Uncle M',
-      songDurationSec: 140000,
-      albumName: 'BUSINESS IS BUSINESS',
-      artistName: 'Young Thug',
-      artworkUrl: 'https://i.scdn.co/image/ab67616d0000b273248ee3b391f1d665113b146a',
-      trackUri: 'spotify:track:12W6EfKhq8rzCUQxgbr6ev',
-    },
-    {
-      songName: 'Get The Strap (feat. Casanova, 6ix9ine & 50 Cent)',
-      songDurationSec: 190514,
-      albumName: 'Get The Strap (feat. Casanova, 6ix9ine & 50 Cent)',
-      artistName: 'Uncle Murda',
-      artworkUrl: 'https://i.scdn.co/image/ab67616d0000b27373d56cc1d8ec8f73ce7bfd40',
-      trackUri: 'spotify:track:4FC2oIKWbXNOq6NThyFxSQ',
-    },
-  ];
-
+  // Function to handle search and make a call to the backend
   const handleSearch = async () => {
-    let mockResults: Song[] = [];
-    if (!query.trim()) return;
+    if (!query.trim()) return; // Do nothing for empty queries
     try {
-      if (query === 'Travis Scott') {
-        mockResults = [travisScottResult];
-      } else if (query === 'Uncle M') {
-        mockResults = uncleMResult;
-      }
-      setResults(mockResults);
+      const response = await axios.get(`http://localhost:8081/jukebox/search`, {
+        params: { query }, // Query parameter sent to the backend
+      });
+
+      // Update state with search results
+      setResults(response.data); // Ensure backend returns results in Song[] format
     } catch (error) {
       console.error('Search failed:', error);
+      jukeboxToast({
+        description: 'Failed to fetch search results. Please try again.',
+        status: 'error',
+      });
     }
   };
 
   const addSong = useCallback(
     async (song: Song) => {
       try {
-        setQueueItems(song);
+        setQueueItems(song); // Add selected song to the queue
       } catch (error) {
         jukeboxToast({
           description: `${error}`,
@@ -113,8 +65,10 @@ export default function JukeboxSearch({
             placeholder='Search for songs...'
             bg='white'
             onKeyDown={e => {
+              // Prevent default behavior and stop propagation
+              e.stopPropagation(); // Prevents the event from reaching global handlers
               if (e.key === 'Enter') {
-                handleSearch();
+                handleSearch(); // Trigger search on Enter key
               }
             }}
           />
@@ -124,7 +78,7 @@ export default function JukeboxSearch({
               aria-label='Search'
               size='sm'
               variant='ghost'
-              onClick={handleSearch}
+              onClick={handleSearch} // Trigger search on button click
               _hover={{ bg: 'gray.200' }}
             />
           </InputRightElement>
