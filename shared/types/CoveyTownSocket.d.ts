@@ -95,6 +95,7 @@ export interface JukeboxArea {
   queue: Song[];
   searchList: Song[];
   volume: number;
+  searchQuery?: string;
 }
 
 export interface ServerToClientEvents {

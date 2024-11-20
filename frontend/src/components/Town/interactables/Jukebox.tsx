@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
-import { Music, Volume2, VolumeX } from 'lucide-react';
+import { Search, Music, Volume2, VolumeX } from 'lucide-react';
 import { useInteractable } from '../../../classes/TownController';
+import SpotifyPlayer from 'react-spotify-web-playback';
 import {
   Modal,
   ModalOverlay,
@@ -10,6 +11,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalContent,
+  Input,
+  InputGroup,
+  InputRightElement,
   IconButton,
   VStack,
   Box,
@@ -27,19 +31,29 @@ import {
   Progress,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
-import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
-import { Song } from '../../../../../shared/types/CoveyTownSocket';
 
 export default function JukeboxArea(): JSX.Element {
   const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
   const coveyTownController = useTownController();
-
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [selectedSong, setSelectedSong] = useState<string | null>(null);
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
-  const [queueItems, setQueueItems] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentSongProgress, setCurrentSongProgress] = useState(0);
+  const [songImage, setSongImage] = useState('');
+
+  // TODO get queue data from users whose id is not the one playing the song, so if Kingsley plays song,
+  // and Kevin wants to play a song kevin can only search the song but CANNOT interupt the song currently playing
+  const queueItems = [
+    { title: 'Young Thug - Be Me See Me', image: '/placeholder1.jpg', by: 'playerIDShouldGoHERE' },
+    {
+      title: 'Travis Scott - Never Catch Me',
+      image: '/placeholder2.jpg',
+      by: 'playerIDShouldGoHERE',
+    },
+    { title: 'Young Thug - Uncle M', image: '/placeholder3.jpg', by: 'playerIDShouldGoHERE' },
+  ];
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -53,32 +67,11 @@ export default function JukeboxArea(): JSX.Element {
       setIsOpen(true);
     }
   }, [jukeboxArea]);
-
-  const addSongToQueue = (song: Song) => {
-    setQueueItems(prevQueue => [...prevQueue, song]);
+  //this had to call our backend, created some random data so that i can atleast test this son of a bitch
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+    console.log(`Got something: ${searchQuery}`);
   };
-
-  const waitTime = (index: number) => {
-    if (index === 0) {
-      return 'Now Playing';
-    }
-    const totalSeconds = Math.floor(queueItems[index].songDurationSec / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-
-    const duration = `${minutes}:${formattedSeconds}`;
-    return 'Duration: ' + duration;
-  };
-
-  useEffect(() => {
-    if (queueItems.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentSongProgress(prev => (prev >= 100 ? 0 : prev + 1));
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [queueItems]);
 
   return (
     <>
@@ -103,18 +96,63 @@ export default function JukeboxArea(): JSX.Element {
             </ModalHeader>
             <ModalCloseButton color='white' />
             <ModalBody>
+              <SpotifyPlayer
+                token='9b5ec263a84b49fcb1781139465630ba'
+                uris={['spotify:track:612Gkl43RQdwlzKGPgkudm']}
+              />
               <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 {/* Left Panel: Search and Volume */}
                 <GridItem>
-                  <VStack spacing={6} align='stretch'>
-                    <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
-                      {isLoading ? (
-                        <Spinner size='lg' color='teal' />
-                      ) : (
-                        <JukeboxSearch setQueueItems={addSongToQueue} />
-                      )}
+                  <VStack spacing={4} align='stretch'>
+                    <Box bg='gray.100' p={4} borderRadius='md'>
+                      <InputGroup size='md'>
+                        <Input
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          placeholder='Search for songs...'
+                          bg='white'
+                          onKeyPress={e => {
+                            if (e.key === 'Enter') {
+                              handleSearch();
+                            }
+                          }}
+                        />
+                        <InputRightElement>
+                          <IconButton
+                            icon={<Search size={20} />}
+                            aria-label='Search'
+                            size='sm'
+                            variant='ghost'
+                            onClick={handleSearch}
+                            _hover={{ bg: 'gray.200' }}
+                          />
+                        </InputRightElement>
+                      </InputGroup>
                     </Box>
-                    <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
+
+                    <Box
+                      flex={1}
+                      overflowY='auto'
+                      maxH='300px'
+                      borderRadius='md'
+                      bg='gray.50'
+                      p={2}>
+                      <VStack align='stretch' spacing={2}>
+                        {searchResults.map((result, index) => (
+                          <Box
+                            key={index}
+                            p={2}
+                            _hover={{ bg: 'gray.100' }}
+                            cursor='pointer'
+                            borderRadius='md'
+                            onClick={() => setSelectedSong(result)}>
+                            <Text>{result}</Text>
+                          </Box>
+                        ))}
+                      </VStack>
+                    </Box>
+
+                    <HStack spacing={4} p={2} bg='gray.100' borderRadius='md'>
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
                         aria-label='Toggle mute'
@@ -151,21 +189,10 @@ export default function JukeboxArea(): JSX.Element {
                               spacing={4}
                               p={3}
                               borderRadius='md'
-                              bg='gray.700'
-                              _hover={{ bg: 'gray.600' }}
-                              alignItems='center'>
-                              <Box
-                                w='10px'
-                                h='10px'
-                                borderRadius='full'
-                                bg={index === 0 ? 'green.400' : 'blue.400'}
-                              />
-                              <Text fontSize='lg' fontWeight='bold' flex={1}>
-                                {song.songName} - {song.artistName}
-                              </Text>
-                              <Text fontSize='sm' color='gray.400'>
-                                {waitTime(index)}
-                              </Text>
+                              boxShadow='sm'
+                              _hover={{ bg: 'gray.50' }}>
+                              <Box w={2} h={2} borderRadius='full' bg='blue.500' />
+                              <Text flex={1}>{song.title}</Text>
                             </HStack>
                           ))
                         ) : (

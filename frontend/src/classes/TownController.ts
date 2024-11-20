@@ -420,7 +420,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
     /**
      * When an interactable's state changes, push that update into the relevant controller, which is assumed
-     * to be either a Viewing Area or a Conversation Area, and which is assumed to already be represented by a
+     * to be either a Viewing Area or a Conversation Area or JukeBox Area, and which is assumed to already be represented by a
      * ViewingAreaController or ConversationAreaController that this TownController has.
      *
      * If a conversation area transitions from empty to occupied (or occupied to empty), this handler will emit
@@ -633,6 +633,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         queue: [],
         volume: 0,
         searchList: [],
+        //sets the default string on the search box such that users knows how to make a search
+        searchQuery: jukeboxArea.defaultSearchQueryString,
       });
       this._jukeboxAreas.push(newController);
       return newController;
@@ -654,7 +656,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    *    with the event
    */
   public emitJukeboxAreaUpdate(jukeboxArea: JukeboxAreaController) {
-    this._socket.emit('interactableUpdate', jukeboxArea.toInteractableModel());
+    this._socket.emit('interactableUpdate', jukeboxArea.JukeBoxAreaModel());
   }
 
   /**

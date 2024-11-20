@@ -45,9 +45,6 @@ export default class ViewingArea extends Interactable {
     this._labelText?.setVisible(false);
     if (this._isInteracting) {
       this.townController.interactableEmitter.emit('endInteraction', this);
-      // this.townController.interactableEmitter.on('continueInteracting', function myFunction(){
-      //   console.log("Still interacting")
-      // })
       this._isInteracting = true;
     }
   }
