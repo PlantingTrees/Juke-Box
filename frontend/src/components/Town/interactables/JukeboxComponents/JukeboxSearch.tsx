@@ -22,11 +22,13 @@ export default function JukeboxSearch({
   const [query, setQuery] = useState('');
   const jukeboxToast = useToast();
 
+  const backendURL = process.env.NEXT_PUBLIC_TOWNS_SERVICE_URL;
+
   // Function to handle search and make a call to the backend
   const handleSearch = async () => {
     if (!query.trim()) return; // Do nothing for empty queries
     try {
-      const response = await axios.get(`http://localhost:8081/jukebox/search`, {
+      const response = await axios.get(`${backendURL}/jukebox/search`, {
         params: { query }, // Query parameter sent to the backend
       });
 
