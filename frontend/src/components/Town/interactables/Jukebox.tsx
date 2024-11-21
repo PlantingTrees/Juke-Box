@@ -24,7 +24,6 @@ import {
   Grid,
   GridItem,
   Spinner,
-  Select,
   Progress,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
@@ -41,7 +40,6 @@ export default function JukeboxArea(): JSX.Element {
   const [queueItems, setQueueItems] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSongProgress, setCurrentSongProgress] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -57,13 +55,13 @@ export default function JukeboxArea(): JSX.Element {
   }, [jukeboxArea]);
 
   const addSongToQueue = (song: Song) => {
-    setQueueItems((prevQueue) => [...prevQueue, song]);
+    setQueueItems(prevQueue => [...prevQueue, song]);
   };
 
   useEffect(() => {
     if (queueItems.length > 0) {
       const interval = setInterval(() => {
-        setCurrentSongProgress((prev) => (prev >= 100 ? 0 : prev + 1));
+        setCurrentSongProgress(prev => (prev >= 100 ? 0 : prev + 1));
       }, 1000);
       return () => clearInterval(interval);
     }
@@ -78,40 +76,38 @@ export default function JukeboxArea(): JSX.Element {
             closeModal();
             coveyTownController.unPause();
           }}
-          size="4xl"
-        >
+          size='4xl'>
           <ModalOverlay />
           <ModalContent
-            bg="linear-gradient(135deg, #1f1f1f, #282828)"
-            color="white"
-            borderRadius="lg"
+            bg='linear-gradient(135deg, #1f1f1f, #282828)'
+            color='white'
+            borderRadius='lg'
             p={6}
-            maxWidth="1200px"
-            boxShadow="xl"
-          >
-            <ModalHeader fontSize="2xl" fontWeight="bold" borderBottom="1px solid gray">
+            maxWidth='1200px'
+            boxShadow='xl'>
+            <ModalHeader fontSize='2xl' fontWeight='bold' borderBottom='1px solid gray'>
               Covey.Town Jukebox
             </ModalHeader>
-            <ModalCloseButton color="white" />
+            <ModalCloseButton color='white' />
             <ModalBody>
-              <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+              <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 {/* Left Panel: Search and Volume */}
                 <GridItem>
-                  <VStack spacing={6} align="stretch">
-                    <Box bg="gray.800" p={4} borderRadius="lg" color={'black'}>
+                  <VStack spacing={6} align='stretch'>
+                    <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
                       {isLoading ? (
-                        <Spinner size="lg" color="teal" />
+                        <Spinner size='lg' color='teal' />
                       ) : (
                         <JukeboxSearch setQueueItems={addSongToQueue} />
                       )}
                     </Box>
-                    <HStack spacing={4} p={4} bg="gray.800" borderRadius="lg" alignItems="center">
+                    <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
-                        aria-label="Toggle mute"
+                        aria-label='Toggle mute'
                         onClick={() => setVolume(volume === 0 ? 50 : 0)}
-                        size="lg"
-                        bg="gray.700"
+                        size='lg'
+                        bg='gray.700'
                         _hover={{ bg: 'gray.600' }}
                       />
                       <Slider
@@ -120,10 +116,9 @@ export default function JukeboxArea(): JSX.Element {
                         min={0}
                         max={100}
                         flex={1}
-                        aria-label="Volume Slider"
-                      >
-                        <SliderTrack bg="gray.600">
-                          <SliderFilledTrack bg="teal.400" />
+                        aria-label='Volume Slider'>
+                        <SliderTrack bg='gray.600'>
+                          <SliderFilledTrack bg='teal.400' />
                         </SliderTrack>
                         <SliderThumb boxSize={4} />
                       </Slider>
@@ -133,36 +128,29 @@ export default function JukeboxArea(): JSX.Element {
 
                 {/* Right Panel: Current Song or Queue */}
                 <GridItem>
-                  <VStack spacing={6} align="stretch">
+                  <VStack spacing={6} align='stretch'>
                     {isQueueVisible ? (
-                      <Box
-                        bg="gray.800"
-                        borderRadius="lg"
-                        p={4}
-                        maxHeight="350px"
-                        overflowY="auto"
-                      >
+                      <Box bg='gray.800' borderRadius='lg' p={4} maxHeight='350px' overflowY='auto'>
                         {queueItems.length > 0 ? (
                           queueItems.map((song, index) => (
                             <HStack
                               key={index}
                               spacing={4}
                               p={3}
-                              borderRadius="md"
-                              bg="gray.700"
+                              borderRadius='md'
+                              bg='gray.700'
                               _hover={{ bg: 'gray.600' }}
-                              alignItems="center"
-                            >
+                              alignItems='center'>
                               <Box
-                                w="10px"
-                                h="10px"
-                                borderRadius="full"
+                                w='10px'
+                                h='10px'
+                                borderRadius='full'
                                 bg={index === 0 ? 'green.400' : 'blue.400'}
                               />
-                              <Text fontSize="lg" fontWeight="bold" flex={1}>
+                              <Text fontSize='lg' fontWeight='bold' flex={1}>
                                 {song.songName} - {song.artistName}
                               </Text>
-                              <Text fontSize="sm" color="gray.400">
+                              <Text fontSize='sm' color='gray.400'>
                                 {`Wait time: ${index * 3} min`}
                               </Text>
                             </HStack>
@@ -173,58 +161,52 @@ export default function JukeboxArea(): JSX.Element {
                       </Box>
                     ) : (
                       <Box
-                        bg="gray.800"
-                        borderRadius="lg"
+                        bg='gray.800'
+                        borderRadius='lg'
                         p={6}
-                        textAlign="center"
-                        height="350px"
-                        display="flex"
-                        flexDirection="column"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
+                        textAlign='center'
+                        height='350px'
+                        display='flex'
+                        flexDirection='column'
+                        justifyContent='center'
+                        alignItems='center'>
                         {queueItems.length > 0 ? (
                           <>
+                            <Text fontSize='lg' fontWeight='bold' mb={2}>
+                              Currently Playing:
+                            </Text>
                             <Image
                               src={queueItems[0]?.artworkUrl || '/placeholder.png'}
-                              alt="Song artwork"
-                              boxSize="200px"
-                              objectFit="cover"
-                              borderRadius="md"
+                              alt='Song artwork'
+                              boxSize='200px'
+                              objectFit='cover'
+                              borderRadius='md'
                             />
-                            <Text mt={4} fontSize="xl" fontWeight="bold">
+                            <Text mt={4} fontSize='xl' fontWeight='bold'>
                               {queueItems[0]?.songName}
                             </Text>
-                            <Text fontSize="lg" color="gray.400">
+                            <Text fontSize='lg' color='gray.400'>
                               by {queueItems[0]?.artistName}
                             </Text>
-                            <Progress
-                              value={currentSongProgress}
-                              size="sm"
-                              colorScheme="teal"
-                              width="100%"
-                              mt={4}
-                            />
                           </>
                         ) : (
-                          <Music size={64} color="teal" />
+                          <Music size={64} color='teal' />
                         )}
                       </Box>
                     )}
                     <Button
                       onClick={() => setIsQueueVisible(!isQueueVisible)}
-                      variant="solid"
-                      colorScheme="teal"
-                      size="lg"
-                      width="100%"
-                    >
+                      variant='solid'
+                      colorScheme='teal'
+                      size='lg'
+                      width='100%'>
                       {isQueueVisible ? 'Show Song' : 'Show Queue'}
                     </Button>
                   </VStack>
                 </GridItem>
               </Grid>
             </ModalBody>
-            <ModalFooter borderTop="1px solid gray" />
+            <ModalFooter borderTop='1px solid gray' />
           </ModalContent>
         </Modal>
       )}
