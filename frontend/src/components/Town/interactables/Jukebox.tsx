@@ -58,6 +58,19 @@ export default function JukeboxArea(): JSX.Element {
     setQueueItems(prevQueue => [...prevQueue, song]);
   };
 
+  const waitTime = (index: number) => {
+    if (index === 0) {
+      return 'Now Playing';
+    }
+    const totalSeconds = Math.floor(queueItems[index].songDurationSec / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+
+    const duration = `${minutes}:${formattedSeconds}`;
+    return 'Duration: ' + duration;
+  };
+
   useEffect(() => {
     if (queueItems.length > 0) {
       const interval = setInterval(() => {
@@ -151,7 +164,7 @@ export default function JukeboxArea(): JSX.Element {
                                 {song.songName} - {song.artistName}
                               </Text>
                               <Text fontSize='sm' color='gray.400'>
-                                {`Wait time: ${index * 3} min`}
+                                {waitTime(index)}
                               </Text>
                             </HStack>
                           ))
