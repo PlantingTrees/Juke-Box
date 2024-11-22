@@ -62,11 +62,13 @@ export default function JukeboxArea(): JSX.Element {
     if (index === 0) {
       return 'Now Playing';
     }
-    let time = 0;
-    for (let i = index - 1; i >= 0; i--) {
-      time = time + Math.trunc(queueItems[i].songDurationSec / (1000 * 60));
-    }
-    return 'Wait Time: ' + time + ' min';
+    const totalSeconds = Math.floor(queueItems[index].songDurationSec / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+
+    const duration = `${minutes}:${formattedSeconds}`;
+    return 'Duration: ' + duration;
   };
 
   useEffect(() => {
