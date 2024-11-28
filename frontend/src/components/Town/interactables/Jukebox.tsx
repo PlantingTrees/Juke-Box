@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
-import { Music, Volume2, VolumeX } from 'lucide-react';
+import {  Music, Plane, Volume2, VolumeX } from 'lucide-react';
 import { useInteractable } from '../../../classes/TownController';
+
 import {
   Modal,
   ModalOverlay,
@@ -29,6 +30,7 @@ import {
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 import { Song } from '../../../../../shared/types/CoveyTownSocket';
+import * as crypto from 'crypto';
 
 export default function JukeboxArea(): JSX.Element {
   const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
@@ -40,7 +42,9 @@ export default function JukeboxArea(): JSX.Element {
   const [queueItems, setQueueItems] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSongProgress, setCurrentSongProgress] = useState(0);
-
+  const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize';
+  const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+  console.log(clientId);
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
       coveyTownController.interactEnd(jukeboxArea);
@@ -80,6 +84,26 @@ export default function JukeboxArea(): JSX.Element {
     }
   }, [queueItems]);
 
+
+    const redirectToSpotifyAuth = () => {
+      const scope = 'streaming user-read-email user-read-private'; // Define scopes you need
+      
+      const redirectUri = 'http://localhost:8081/auth/callback'; // Adjust to your actual redirect URI
+      const state = generateRandomString(16); // Optional state for CSRF protection
+    
+      const authUrl = `${SPOTIFY_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
+    
+      window.location.href = authUrl; // Redirect user to Spotify
+    };
+    
+    const generateRandomString = (length: number) => {
+      return crypto.randomBytes(length).toString('hex').slice(0, length);
+    };
+
+
+
+
+
   return (
     <>
       {jukeboxArea && (
@@ -103,6 +127,17 @@ export default function JukeboxArea(): JSX.Element {
             </ModalHeader>
             <ModalCloseButton color='white' />
             <ModalBody>
+              <Box>
+                {/** handles login to spotify */}
+              <IconButton
+                        icon={Plane}
+                        aria-label='plane'
+                        onClick={() => redirectToSpotifyAuth()}
+                        size='sm'
+                        bg='gray.700'
+                        _hover={{ bg: 'gray.600' }}
+                      />
+              </Box>
               <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 {/* Left Panel: Search and Volume */}
                 <GridItem>
