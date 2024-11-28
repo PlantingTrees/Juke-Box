@@ -44,6 +44,9 @@ const jukeboxController = new JukeboxController();
 app.get('/jukebox/search', spotifySearchController);
 // app.get('/jukebox/votetoskip', jukeboxController.voteToSkip);
 app.get('/jukebox/addtoqueue', jukeboxController.addToQueue);
+app.get('jukebox/auth/login', jukeboxController.handleLogin);
+app.get('/jukebox/auth/callback', jukeboxController.handleCallback);
+app.get('jukebox/auth/token', jukeboxController.getToken);
 // Register the TownsController routes with the express server
 RegisterRoutes(app);
 
