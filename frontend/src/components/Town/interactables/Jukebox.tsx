@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
-import { Music, Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { useInteractable } from '../../../classes/TownController';
 import {
   Modal,
@@ -19,26 +19,26 @@ import {
   SliderFilledTrack,
   SliderThumb,
   HStack,
-  Image,
-  Text,
   Grid,
   GridItem,
-  Spinner,
-  Progress,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 import { Song } from '../../../../../shared/types/CoveyTownSocket';
+import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
+import JukeboxSong from './JukeboxComponents/JukeboxSong';
 
-export default function JukeboxArea(): JSX.Element {
-  const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
+export function JukeboxArea({
+  jukeboxArea,
+}: {
+  jukeboxArea: JukeboxAreaInteractable;
+}): JSX.Element {
   const coveyTownController = useTownController();
 
   const [isOpen, setIsOpen] = useState(false);
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [queueItems, setQueueItems] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [currentSongProgress, setCurrentSongProgress] = useState(0);
 
   const closeModal = useCallback(() => {
@@ -56,19 +56,6 @@ export default function JukeboxArea(): JSX.Element {
 
   const addSongToQueue = (song: Song) => {
     setQueueItems(prevQueue => [...prevQueue, song]);
-  };
-
-  const waitTime = (index: number) => {
-    if (index === 0) {
-      return 'Now Playing';
-    }
-    const totalSeconds = Math.floor(queueItems[index].songDurationSec / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
-
-    const duration = `${minutes}:${formattedSeconds}`;
-    return 'Duration: ' + duration;
   };
 
   useEffect(() => {
@@ -108,11 +95,7 @@ export default function JukeboxArea(): JSX.Element {
                 <GridItem>
                   <VStack spacing={6} align='stretch'>
                     <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
-                      {isLoading ? (
-                        <Spinner size='lg' color='teal' />
-                      ) : (
-                        <JukeboxSearch setQueueItems={addSongToQueue} />
-                      )}
+                      <JukeboxSearch setQueueItems={addSongToQueue} />
                     </Box>
                     <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
                       <IconButton
@@ -143,69 +126,9 @@ export default function JukeboxArea(): JSX.Element {
                 <GridItem>
                   <VStack spacing={6} align='stretch'>
                     {isQueueVisible ? (
-                      <Box bg='gray.800' borderRadius='lg' p={4} maxHeight='350px' overflowY='auto'>
-                        {queueItems.length > 0 ? (
-                          queueItems.map((song, index) => (
-                            <HStack
-                              key={index}
-                              spacing={4}
-                              p={3}
-                              borderRadius='md'
-                              bg='gray.700'
-                              _hover={{ bg: 'gray.600' }}
-                              alignItems='center'>
-                              <Box
-                                w='10px'
-                                h='10px'
-                                borderRadius='full'
-                                bg={index === 0 ? 'green.400' : 'blue.400'}
-                              />
-                              <Text fontSize='lg' fontWeight='bold' flex={1}>
-                                {song.songName} - {song.artistName}
-                              </Text>
-                              <Text fontSize='sm' color='gray.400'>
-                                {waitTime(index)}
-                              </Text>
-                            </HStack>
-                          ))
-                        ) : (
-                          <Text>No songs in the queue yet!</Text>
-                        )}
-                      </Box>
+                      <JukeboxQueue currentQueue={queueItems} />
                     ) : (
-                      <Box
-                        bg='gray.800'
-                        borderRadius='lg'
-                        p={6}
-                        textAlign='center'
-                        height='350px'
-                        display='flex'
-                        flexDirection='column'
-                        justifyContent='center'
-                        alignItems='center'>
-                        {queueItems.length > 0 ? (
-                          <>
-                            <Text fontSize='lg' fontWeight='bold' mb={2}>
-                              Currently Playing:
-                            </Text>
-                            <Image
-                              src={queueItems[0]?.artworkUrl || '/placeholder.png'}
-                              alt='Song artwork'
-                              boxSize='200px'
-                              objectFit='cover'
-                              borderRadius='md'
-                            />
-                            <Text mt={4} fontSize='xl' fontWeight='bold'>
-                              {queueItems[0]?.songName}
-                            </Text>
-                            <Text fontSize='lg' color='gray.400'>
-                              by {queueItems[0]?.artistName}
-                            </Text>
-                          </>
-                        ) : (
-                          <Music size={64} color='teal' />
-                        )}
-                      </Box>
+                      <JukeboxSong currentQueue={queueItems} />
                     )}
                     <Button
                       onClick={() => setIsQueueVisible(!isQueueVisible)}
@@ -225,4 +148,12 @@ export default function JukeboxArea(): JSX.Element {
       )}
     </>
   );
+}
+
+export default function JukeboxAreaWrapper(): JSX.Element {
+  const jukeboxArea = useInteractable<JukeboxAreaInteractable>('jukeboxArea');
+  if (jukeboxArea) {
+    return <JukeboxArea jukeboxArea={jukeboxArea} />;
+  }
+  return <></>;
 }
