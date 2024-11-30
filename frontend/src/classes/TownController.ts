@@ -650,7 +650,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   /**
    * Emit a jukebox area update to the townService
-   * @param jukeboxArea The Viewing Area Controller that is updated and should be emitted
+   * @param jukeboxArea The Jukebox Area Controller that is updated and should be emitted
    *    with the event
    */
   public emitJukeboxAreaUpdate(jukeboxArea: JukeboxAreaController) {
