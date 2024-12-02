@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
 import { Volume2, VolumeX } from 'lucide-react';
-import { useInteractable } from '../../../classes/TownController';
+import { useInteractable, useJukeboxAreaController } from '../../../classes/TownController';
 import {
   Modal,
   ModalOverlay,
@@ -34,11 +34,12 @@ export function JukeboxArea({
   jukeboxArea: JukeboxAreaInteractable;
 }): JSX.Element {
   const coveyTownController = useTownController();
+  const jukeboxAreaController = useJukeboxAreaController(jukeboxArea.name);
 
   const [isOpen, setIsOpen] = useState(false);
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
-  const [queueItems, setQueueItems] = useState<Song[]>([]);
+  const [queueItems, setQueueItems] = useState<Song[]>(jukeboxAreaController.songs);
   const [currentSongProgress, setCurrentSongProgress] = useState(0);
 
   const closeModal = useCallback(() => {
@@ -55,8 +56,27 @@ export function JukeboxArea({
   }, [jukeboxArea]);
 
   const addSongToQueue = (song: Song) => {
-    setQueueItems(prevQueue => [...prevQueue, song]);
+    setQueueItems(prevQueue => {
+      const newQueue = [...prevQueue, song];
+      jukeboxAreaController.songs = newQueue;
+      return newQueue;
+    });
   };
+
+  useEffect(() => {
+    const queueListener = (newQueue: Song[]) => {
+      let currentQueueLength = queueItems.length;
+      if (currentQueueLength < newQueue.length) {
+        currentQueueLength = newQueue.length;
+      }
+    };
+
+    jukeboxAreaController.addListener('songsAdded', queueListener);
+    coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
+    return () => {
+      jukeboxAreaController.removeListener('songsAdded', queueListener);
+    };
+  }, [queueItems, jukeboxAreaController, coveyTownController]);
 
   useEffect(() => {
     if (queueItems.length > 0) {
