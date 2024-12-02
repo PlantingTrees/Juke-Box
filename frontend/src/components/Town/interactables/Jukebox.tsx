@@ -72,10 +72,11 @@ export function JukeboxArea({
     };
 
     jukeboxAreaController.addListener('songsAdded', queueListener);
+    coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
     return () => {
       jukeboxAreaController.removeListener('songsAdded', queueListener);
     };
-  }, [queueItems, jukeboxAreaController]);
+  }, [queueItems, jukeboxAreaController, coveyTownController]);
 
   useEffect(() => {
     if (queueItems.length > 0) {

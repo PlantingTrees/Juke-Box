@@ -17,7 +17,7 @@ import axios from 'axios';
 export default function JukeboxSearch({
   setQueueItems,
 }: {
-  setQueueItems: (song: Song) => Song[];
+  setQueueItems: (song: Song) => void;
 }): JSX.Element {
   const [results, setResults] = useState<Song[]>([]);
   const [query, setQuery] = useState('');
