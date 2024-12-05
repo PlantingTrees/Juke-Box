@@ -9,7 +9,7 @@ const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 let accessToken = '';
 /** Fetches a new access token from Spotify */
-export async function getSpotifyAccessToken(): Promise<void> {
+export async function getSpotifyAccessToken(): Promise<string> {
   try {
     const response = await axios.post(
       SPOTIFY_AUTH_URL,
@@ -27,6 +27,7 @@ export async function getSpotifyAccessToken(): Promise<void> {
   } catch (error) {
     throw new Error('Token fetch failed');
   }
+  return accessToken;
 }
 /** Searches Spotify for tracks by a given query */
 export async function searchSpotifyTracks(query: string): Promise<Song[]> {
