@@ -12,7 +12,6 @@ import { ClientToServerEvents, ServerToClientEvents } from './types/CoveyTownSoc
 import { TownsController } from './town/TownsController';
 import { logError } from './Utils';
 import { spotifySearchController } from './town/JukeboxController';
-import { getSpotifyAccessToken } from './services/JukeboxService';
 
 // Create the server instances
 const app = Express();
@@ -42,16 +41,6 @@ app.use('/docs', swaggerUi.serve, async (_req: Express.Request, res: Express.Res
 
 // Spotify API route - directly registered here
 app.get('/jukebox/search', spotifySearchController);
-
-// Spotify Token Generation route
-app.get('/spotify/token', async (_req, res) => {
-  try {
-    const token = await getSpotifyAccessToken();
-    res.json({ token });
-  } catch (err) {
-    res.status(500).send('Failed to fetch Spotify token');
-  }
-});
 
 // Register the TownsController routes with the express server
 RegisterRoutes(app);
