@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Song } from '../types/CoveyTownSocket';
 
 declare global {
   interface Window {
@@ -12,29 +11,25 @@ declare global {
         volume: number;
       }) => {
         connect: () => void;
+        disconnect: () => void;
         addListener: (event: string, callback: (data: any) => void) => void;
       };
     };
   }
 }
 
-const useSpotifyPlayer = (token: string, queue: Song[], onSongEnd: () => void) => {
+const useSpotifyPlayer = (token: string, trackUri: string | null, onSongEnd: () => void) => {
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const playerRef = useRef<any>(null); // Ref to store player instance
+  const playerRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!token || queue.length === 0) return;
+    if (!token || !trackUri) return;
 
     const playTrack = (device_id: string) => {
-      if (!queue[0]) {
-        console.error('No track URI provided in the queue.');
-        return;
-      }
-
       axios
         .put(
           `https://api.spotify.com/v1/me/player/play?device_id=${device_id}`,
-          { uris: [queue[0].trackUri] },
+          { uris: [trackUri] },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -43,7 +38,7 @@ const useSpotifyPlayer = (token: string, queue: Song[], onSongEnd: () => void) =
         )
         .then(response => {
           if (response.status === 204) {
-            console.log(`Playback started for: ${queue[0].trackUri}`);
+            console.log(`Playback started for: ${trackUri}`);
           } else {
             console.error('Error starting playback:', response.status, response.statusText);
           }
@@ -53,14 +48,19 @@ const useSpotifyPlayer = (token: string, queue: Song[], onSongEnd: () => void) =
         });
     };
 
-    if (playerRef.current) return; // Prevent initializing player again if it's already initialized
+    if (playerRef.current) {
+      // Reuse the existing player instance to play the new track
+      if (deviceId) {
+        playTrack(deviceId);
+      }
+      return;
+    }
 
     // Dynamically load the Spotify SDK script
     const script = document.createElement('script');
     script.src = 'https://sdk.scdn.co/spotify-player.js';
     script.async = true;
 
-    // Log when the SDK script has loaded
     script.onload = () => {
       console.log('Spotify Player SDK script loaded');
       window.onSpotifyWebPlaybackSDKReady = () => {
@@ -81,22 +81,22 @@ const useSpotifyPlayer = (token: string, queue: Song[], onSongEnd: () => void) =
         player.addListener('ready', ({ device_id }) => {
           console.log('Player ready with Device ID', device_id);
           setDeviceId(device_id);
-          playTrack(device_id); // Start playback when player is ready
+          playTrack(device_id);
         });
 
         player.addListener('player_state_changed', state => {
           if (!state) return;
-          if (
+          const trackEnded =
             state.paused &&
             state.position === 0 &&
-            state.track_window.current_track.uri === queue[0]?.trackUri
-          ) {
-            onSongEnd(); // Trigger when the song ends
+            state.track_window.current_track.uri === trackUri;
+          if (trackEnded) {
+            onSongEnd();
           }
         });
 
         player.connect();
-        playerRef.current = player; // Store player instance in ref
+        playerRef.current = player;
       };
     };
 
@@ -109,10 +109,10 @@ const useSpotifyPlayer = (token: string, queue: Song[], onSongEnd: () => void) =
     return () => {
       document.body.removeChild(script);
       if (playerRef.current) {
-        playerRef.current.disconnect(); // Disconnect player when component unmounts
+        playerRef.current.disconnect();
       }
     };
-  }, [token, queue, onSongEnd]); // Depend on token and queue, not on every re-render
+  }, [token, trackUri, onSongEnd]);
 
   return { deviceId };
 };

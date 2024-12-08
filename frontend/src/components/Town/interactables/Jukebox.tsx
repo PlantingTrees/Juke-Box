@@ -27,7 +27,7 @@ import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 import { Song } from '../../../../../shared/types/CoveyTownSocket';
 import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
 import JukeboxSong from './JukeboxComponents/JukeboxSong';
-import JukeboxPlayer from './JukeboxComponents/JukeboxPlayer'; // Import the player
+import JukeboxPlayer from './JukeboxComponents/JukeboxPlayer';
 
 export function JukeboxArea({
   jukeboxArea,
@@ -41,10 +41,8 @@ export function JukeboxArea({
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [queueItems, setQueueItems] = useState<Song[]>(jukeboxAreaController.songs);
-  const [currentSongProgress, setCurrentSongProgress] = useState(0);
   const [token, setToken] = useState<string | null>(null); // Spotify token state
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if the user is logged in
-  const backendURL = process.env.NEXT_PUBLIC_TOWNS_SERVICE_URL;
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -58,6 +56,26 @@ export function JukeboxArea({
       setIsOpen(true);
     }
   }, [jukeboxArea]);
+
+  const addSongToQueue = (song: Song) => {
+    setQueueItems(prevQueue => {
+      const newQueue = [...prevQueue, song];
+      jukeboxAreaController.songs = newQueue;
+      return newQueue;
+    });
+  };
+
+  useEffect(() => {
+    const queueListener = (newQueue: Song[]) => {
+      setQueueItems(newQueue);
+    };
+
+    jukeboxAreaController.addListener('songsAdded', queueListener);
+    coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
+    return () => {
+      jukeboxAreaController.removeListener('songsAdded', queueListener);
+    };
+  }, [jukeboxAreaController, coveyTownController]);
 
   // Function to handle Spotify login
   const loginToSpotify = () => {
@@ -91,16 +109,6 @@ export function JukeboxArea({
     handleSpotifyToken();
   }, [handleSpotifyToken]);
 
-  // Add a song to the queue
-  const addSongToQueue = (song: Song) => {
-    setQueueItems(prevQueue => {
-      const newQueue = [...prevQueue, song];
-      jukeboxAreaController.songs = newQueue;
-      coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
-      return newQueue;
-    });
-  };
-
   // Handle song end: remove the first song in the queue
   const handleSongEnd = () => {
     setQueueItems(prevQueue => {
@@ -111,115 +119,113 @@ export function JukeboxArea({
     });
   };
 
-  // Monitor queue for updates
-  useEffect(() => {
-    const queueListener = (newQueue: Song[]) => {
-      setQueueItems(newQueue);
-    };
-
-    jukeboxAreaController.addListener('songsAdded', queueListener);
-    return () => {
-      jukeboxAreaController.removeListener('songsAdded', queueListener);
-    };
-  }, [jukeboxAreaController]);
-
   return (
     <>
       {jukeboxArea && (
-        <>
-          {/* Show login button if not logged in */}
-          {!isLoggedIn ? (
-            <Button onClick={loginToSpotify} colorScheme='green' size='lg' width='100%'>
-              Log in to Spotify
-            </Button>
-          ) : (
-            <>
-              {/* Spotify Player Integration */}
-              <JukeboxPlayer token={token} queue={queueItems} onSongEnd={handleSongEnd} />
+        <Modal
+          isOpen={isOpen}
+          onClose={() => {
+            closeModal();
+            coveyTownController.unPause();
+          }}
+          size='4xl'>
+          <ModalOverlay />
+          <ModalContent
+            bg='linear-gradient(135deg, #1f1f1f, #282828)'
+            color='white'
+            borderRadius='lg'
+            p={6}
+            maxWidth='1200px'
+            boxShadow='xl'>
+            <ModalHeader fontSize='2xl' fontWeight='bold' borderBottom='1px solid gray'>
+              Covey.Town Jukebox
+            </ModalHeader>
+            <ModalCloseButton color='white' />
+            <ModalBody>
+              <Grid templateColumns='repeat(2, 1fr)' gap={6}>
+                {/* Left Panel: Search and Volume */}
+                <GridItem>
+                  <VStack spacing={6} align='stretch'>
+                    <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
+                      <JukeboxSearch setQueueItems={addSongToQueue} />
+                    </Box>
+                    <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
+                      <IconButton
+                        icon={volume === 0 ? <VolumeX /> : <Volume2 />}
+                        aria-label='Toggle mute'
+                        onClick={() => setVolume(volume === 0 ? 50 : 0)}
+                        size='lg'
+                        bg='gray.700'
+                        _hover={{ bg: 'gray.600' }}
+                      />
+                      <Slider
+                        value={volume}
+                        onChange={setVolume}
+                        min={0}
+                        max={100}
+                        flex={1}
+                        aria-label='Volume Slider'>
+                        <SliderTrack bg='gray.600'>
+                          <SliderFilledTrack bg='teal.400' />
+                        </SliderTrack>
+                        <SliderThumb boxSize={4} />
+                      </Slider>
+                    </HStack>
+                  </VStack>
+                </GridItem>
 
-              <Modal
-                isOpen={isOpen}
-                onClose={() => {
-                  closeModal();
-                  coveyTownController.unPause();
-                }}
-                size='4xl'>
-                <ModalOverlay />
-                <ModalContent
-                  bg='linear-gradient(135deg, #1f1f1f, #282828)'
-                  color='white'
-                  borderRadius='lg'
-                  p={6}
-                  maxWidth='1200px'
-                  boxShadow='xl'>
-                  <ModalHeader fontSize='2xl' fontWeight='bold' borderBottom='1px solid gray'>
-                    Covey.Town Jukebox
-                  </ModalHeader>
-                  <ModalCloseButton color='white' />
-                  <ModalBody>
-                    <Grid templateColumns='repeat(2, 1fr)' gap={6}>
-                      {/* Left Panel: Search and Volume */}
-                      <GridItem>
-                        <VStack spacing={6} align='stretch'>
-                          <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
-                            <JukeboxSearch setQueueItems={addSongToQueue} />
-                          </Box>
-                          <HStack
-                            spacing={4}
-                            p={4}
-                            bg='gray.800'
-                            borderRadius='lg'
-                            alignItems='center'>
-                            <IconButton
-                              icon={volume === 0 ? <VolumeX /> : <Volume2 />}
-                              aria-label='Toggle mute'
-                              onClick={() => setVolume(volume === 0 ? 50 : 0)}
-                              size='lg'
-                              bg='gray.700'
-                              _hover={{ bg: 'gray.600' }}
-                            />
-                            <Slider
-                              value={volume}
-                              onChange={setVolume}
-                              min={0}
-                              max={100}
-                              flex={1}
-                              aria-label='Volume Slider'>
-                              <SliderTrack bg='gray.600'>
-                                <SliderFilledTrack bg='teal.400' />
-                              </SliderTrack>
-                              <SliderThumb boxSize={4} />
-                            </Slider>
-                          </HStack>
-                        </VStack>
-                      </GridItem>
-
-                      {/* Right Panel: Current Song or Queue */}
-                      <GridItem>
-                        <VStack spacing={6} align='stretch'>
-                          {isQueueVisible ? (
-                            <JukeboxQueue currentQueue={queueItems} />
-                          ) : (
-                            <JukeboxSong currentQueue={queueItems} />
-                          )}
-                          <Button
-                            onClick={() => setIsQueueVisible(!isQueueVisible)}
-                            variant='solid'
-                            colorScheme='teal'
-                            size='lg'
-                            width='100%'>
-                            {isQueueVisible ? 'Show Song' : 'Show Queue'}
-                          </Button>
-                        </VStack>
-                      </GridItem>
-                    </Grid>
-                  </ModalBody>
-                  <ModalFooter borderTop='1px solid gray' />
-                </ModalContent>
-              </Modal>
-            </>
+                {/* Right Panel: Current Song or Queue */}
+                <GridItem>
+                  <VStack spacing={6} align='stretch'>
+                    {isQueueVisible ? (
+                      <JukeboxQueue currentQueue={queueItems} />
+                    ) : (
+                      <JukeboxSong currentQueue={queueItems} />
+                    )}
+                    <Button
+                      onClick={() => setIsQueueVisible(!isQueueVisible)}
+                      variant='solid'
+                      colorScheme='teal'
+                      size='lg'
+                      width='100%'>
+                      {isQueueVisible ? 'Show Song' : 'Show Queue'}
+                    </Button>
+                  </VStack>
+                </GridItem>
+              </Grid>
+            </ModalBody>
+            <ModalFooter
+              borderTop='1px solid gray'
+              display='flex'
+              flexDirection='column'
+              alignItems='center'>
+              {!isLoggedIn && (
+                <>
+                  <Button
+                    onClick={loginToSpotify}
+                    variant='solid'
+                    colorScheme='teal'
+                    size='md'
+                    width='100%'
+                    mb={2}>
+                    Log in to Spotify
+                  </Button>
+                  <Box color='gray.400' fontSize='sm' textAlign='center'>
+                    Log in to Spotify to listen to the Covey.Town Jukebox!
+                  </Box>
+                </>
+              )}
+            </ModalFooter>
+            <ModalFooter borderTop='1px solid gray' />
+          </ModalContent>
+          {token && queueItems.length > 0 && (
+            <JukeboxPlayer
+              token={token}
+              trackUri={queueItems[0].trackUri}
+              onSongEnd={handleSongEnd}
+            />
           )}
-        </>
+        </Modal>
       )}
     </>
   );

@@ -1,17 +1,14 @@
-// src/components/Town/interactables/JukeboxComponents/JukeboxPlayer.tsx
-
 import useSpotifyPlayer from '../../../../hooks/useSpotifyPlayer';
-import { Song } from '../../../../types/CoveyTownSocket';
 
 interface JukeboxPlayerProps {
   token: string; // Spotify OAuth token from backend
-  queue: Song[]; // Queue of songs to play
+  trackUri: string | null; // URI of the current track to play
   onSongEnd: () => void; // Callback when a song ends
 }
 
 // Define the component as a standard TypeScript function
-function JukeboxPlayer({ token, queue, onSongEnd }: JukeboxPlayerProps): null {
-  const { deviceId } = useSpotifyPlayer(token, queue, onSongEnd);
+function JukeboxPlayer({ token, trackUri, onSongEnd }: JukeboxPlayerProps): null {
+  const { deviceId } = useSpotifyPlayer(token, trackUri, onSongEnd);
 
   console.log('Device ID:', deviceId);
 
