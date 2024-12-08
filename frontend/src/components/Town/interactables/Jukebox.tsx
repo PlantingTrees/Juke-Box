@@ -82,7 +82,7 @@ export function JukeboxArea({
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI as string; // Adjust based on your setup
     const scopes =
-      'user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative';
+      'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative';
     const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(
       redirectUri,
     )}`;

@@ -112,7 +112,7 @@ const useSpotifyPlayer = (token: string, trackUri: string | null, onSongEnd: () 
         playerRef.current.disconnect();
       }
     };
-  }, [token, trackUri, onSongEnd]);
+  }, [token, trackUri, onSongEnd, deviceId]);
 
   return { deviceId };
 };
