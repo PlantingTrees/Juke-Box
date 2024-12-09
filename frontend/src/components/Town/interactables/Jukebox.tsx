@@ -83,6 +83,14 @@ export function JukeboxArea({
     });
   };
 
+  // Implementation of how we should use the player
+  // useEffect(() => {
+  //   if (queueItems.length) {
+  //     // play queueItems[0]
+  //   }
+  // }, [queue]);
+
+  //TODO: Add an emitter for the currentlyPlaying song whenever we swap a song.
   useEffect(() => {
     const queueListener = (newQueue: Song[]) => {
       setQueueItems(newQueue);
