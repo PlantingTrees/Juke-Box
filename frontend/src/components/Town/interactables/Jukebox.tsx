@@ -66,6 +66,10 @@ export function JukeboxArea({
   };
 
   useEffect(() => {
+    // main playing logic goes
+  }, [queue]);
+
+  useEffect(() => {
     const queueListener = (newQueue: Song[]) => {
       setQueueItems(newQueue);
     };
