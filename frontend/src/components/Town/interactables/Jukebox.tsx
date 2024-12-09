@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
 import { Volume2, VolumeX } from 'lucide-react';
 import { useInteractable, useJukeboxAreaController } from '../../../classes/TownController';
@@ -27,7 +27,23 @@ import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 import { Song } from '../../../../../shared/types/CoveyTownSocket';
 import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
 import JukeboxSong from './JukeboxComponents/JukeboxSong';
-import JukeboxPlayer from './JukeboxComponents/JukeboxPlayer';
+
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        connect: () => void;
+        disconnect: () => void;
+        addListener: (event: string, callback: (data: any) => void) => void;
+      };
+    };
+  }
+}
 
 export function JukeboxArea({
   jukeboxArea,
@@ -43,6 +59,8 @@ export function JukeboxArea({
   const [queueItems, setQueueItems] = useState<Song[]>(jukeboxAreaController.songs);
   const [token, setToken] = useState<string | null>(null); // Spotify token state
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if the user is logged in
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const playerRef = useRef<any>(null);
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -109,15 +127,85 @@ export function JukeboxArea({
     handleSpotifyToken();
   }, [handleSpotifyToken]);
 
-  // Handle song end: remove the first song in the queue
   const handleSongEnd = () => {
     setQueueItems(prevQueue => {
-      const newQueue = prevQueue.slice(1); // Remove the first song
+      if (prevQueue.length === 0) {
+        return []; // No songs to play
+      }
+
+      const newQueue = prevQueue.slice(1); // Remove the first song from the queue
+
+      // Update the controller and emit the new state
       jukeboxAreaController.songs = newQueue;
       coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
-      return newQueue;
+
+      return newQueue; // Ensure the React state matches the controller state
     });
   };
+
+  // Load and initialize Spotify Player
+  useEffect(() => {
+    if (!token || queueItems.length === 0) return;
+
+    const trackUri = queueItems[0].trackUri;
+
+    const playTrack = (device_id: string) => {
+      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [trackUri] }),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }).catch(error => console.error('Error playing track:', error));
+    };
+
+    if (playerRef.current) {
+      // Use existing player
+      if (deviceId) {
+        playTrack(deviceId);
+      }
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://sdk.scdn.co/spotify-player.js';
+    script.async = true;
+
+    script.onload = () => {
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        const player = new window.Spotify.Player({
+          name: 'Covey.town Jukebox Player',
+          getOAuthToken: cb => cb(token),
+          volume: volume / 100,
+        });
+
+        player.addListener('ready', ({ device_id }) => {
+          console.log('Spotify Player is ready with Device ID:', device_id);
+          setDeviceId(device_id);
+          playTrack(device_id);
+        });
+
+        player.addListener('player_state_changed', state => {
+          if (state && state.paused && state.position === 0) {
+            handleSongEnd();
+          }
+        });
+
+        player.connect();
+        playerRef.current = player;
+      };
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+      if (playerRef.current) {
+        playerRef.current.disconnect();
+      }
+    };
+  }, [token, queueItems, volume]);
 
   return (
     <>
@@ -218,13 +306,6 @@ export function JukeboxArea({
             </ModalFooter>
             <ModalFooter borderTop='1px solid gray' />
           </ModalContent>
-          {token && queueItems.length > 0 && (
-            <JukeboxPlayer
-              token={token}
-              trackUri={queueItems[0].trackUri}
-              onSongEnd={handleSongEnd}
-            />
-          )}
         </Modal>
       )}
     </>

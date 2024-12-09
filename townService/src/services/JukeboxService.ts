@@ -41,7 +41,7 @@ export async function searchSpotifyTracks(query: string): Promise<Song[]> {
       params: {
         q: query,
         type: 'track',
-        limit: 5,
+        limit: 10,
       },
     });
     // Map the Spotify response to an array of Song objects
