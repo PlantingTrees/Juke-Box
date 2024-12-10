@@ -137,28 +137,92 @@ export function JukeboxArea({
 
   const handleSongEnd = () => {
     setQueueItems(prevQueue => {
-      if (prevQueue.length === 0) {
-        return []; // No songs to play
+      if (prevQueue.length <= 1) {
+        jukeboxAreaController.songs = []; // Clear songs when queue is empty or only one remains
+        coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
+        return [];
       }
 
-      const newQueue = prevQueue.slice(1); // Remove the first song from the queue
-
-      // Update the controller and emit the new state
-      jukeboxAreaController.songs = newQueue;
-      coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
-
-      return newQueue; // Ensure the React state matches the controller state
+      const newQueue = prevQueue.slice(1); // Remove the first song
+      jukeboxAreaController.songs = newQueue; // Update controller
+      coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController); // Emit the change
+      return newQueue; // Update state
     });
   };
 
-  // Load and initialize Spotify Player
+  // Load and initialize the Spotify Player when the modal opens
   useEffect(() => {
-    if (!token || queueItems.length === 0) return;
+    if (!token) return;
 
-    const trackUri = queueItems[0].trackUri;
+    if (!window.Spotify) {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.scdn.co/spotify-player.js';
+      script.async = true;
 
-    const playTrack = (device_id: string) => {
-      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
+      script.onload = () => {
+        console.log('Spotify SDK script loaded.');
+      };
+
+      document.body.appendChild(script);
+    }
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      console.log('Spotify SDK is ready');
+      const player = new window.Spotify.Player({
+        name: 'Covey.town Jukebox Player',
+        getOAuthToken: cb => cb(token),
+        volume: volume / 100,
+      });
+
+      player.addListener('ready', ({ device_id }) => {
+        console.log('Player is ready with Device ID:', device_id);
+        setDeviceId(device_id);
+      });
+
+      player.addListener('not_ready', ({ device_id }) => {
+        console.error('Player is not ready:', device_id);
+      });
+
+      player.addListener('initialization_error', ({ message }) => {
+        console.error('Initialization error:', message);
+      });
+
+      player.addListener('authentication_error', ({ message }) => {
+        console.error('Authentication error:', message);
+      });
+
+      player.addListener('account_error', ({ message }) => {
+        console.error('Account error:', message);
+      });
+
+      player.addListener('player_state_changed', state => {
+        console.log('Player state changed:', state);
+        if (!state) return;
+
+        if (state.paused && state.position === 0 && state.track_window.previous_tracks.length > 0) {
+          handleSongEnd();
+        }
+      });
+
+      player.connect();
+      playerRef.current = player;
+    };
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.disconnect();
+      }
+    };
+  }, [token, volume]);
+
+  // Play songs when the queue changes
+  useEffect(() => {
+    if (!deviceId || !queueItems.length || !token) return;
+
+    const playTrack = () => {
+      const trackUri = queueItems[0].trackUri;
+
+      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
         body: JSON.stringify({ uris: [trackUri] }),
         headers: {
@@ -168,52 +232,8 @@ export function JukeboxArea({
       }).catch(error => console.error('Error playing track:', error));
     };
 
-    if (playerRef.current) {
-      // Use existing player
-      if (deviceId) {
-        playTrack(deviceId);
-      }
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://sdk.scdn.co/spotify-player.js';
-    script.async = true;
-
-    script.onload = () => {
-      window.onSpotifyWebPlaybackSDKReady = () => {
-        const player = new window.Spotify.Player({
-          name: 'Covey.town Jukebox Player',
-          getOAuthToken: cb => cb(token),
-          volume: volume / 100,
-        });
-
-        player.addListener('ready', ({ device_id }) => {
-          console.log('Spotify Player is ready with Device ID:', device_id);
-          setDeviceId(device_id);
-          playTrack(device_id);
-        });
-
-        player.addListener('player_state_changed', state => {
-          if (state && state.paused && state.position === 0) {
-            handleSongEnd();
-          }
-        });
-
-        player.connect();
-        playerRef.current = player;
-      };
-    };
-
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-      if (playerRef.current) {
-        playerRef.current.disconnect();
-      }
-    };
-  }, [token, queueItems, volume]);
+    playTrack();
+  }, [queueItems, deviceId, token]);
 
   return (
     <>
