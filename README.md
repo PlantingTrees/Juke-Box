@@ -48,4 +48,4 @@ The frontend will automatically re-compile and reload in your browser if you cha
 
 ### Running the Jukebox Component on Local
 
-In the frontend .env file you will need to add three lines to be able to connect to the jukebox service we implemented. Be sure to add `NEXT_PUBLIC_TOWN_DEV_MODE=true`, `NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000` (Change location depending on deployment), and `NEXT_PUBLIC_SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` to your frontend .env file. On your backend please include `SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` and `SPOTIFY_CLIENT_SECRET=0a2a86b51ecc48de97ae93f168786ca8` to the .env file.
+In the frontend .env file you will need to add three lines to be able to connect to the jukebox service we implemented. Be sure to add `NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000` (Change location depending on deployment), and `NEXT_PUBLIC_SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` to your frontend .env file. On your backend please include `SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` and `SPOTIFY_CLIENT_SECRET=0a2a86b51ecc48de97ae93f168786ca8` to the .env file.
