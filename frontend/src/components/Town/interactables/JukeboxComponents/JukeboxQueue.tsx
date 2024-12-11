@@ -1,8 +1,10 @@
 import { Song } from '../../../../types/CoveyTownSocket';
-import { Box, HStack, Text } from '@chakra-ui/react';
-import React from 'react';
+import { Box, HStack, Text, Image, VStack } from '@chakra-ui/react';
+import React, { useState } from 'react';
 
 export default function JukeboxQueue({ currentQueue }: { currentQueue: Song[] }): JSX.Element {
+  const [hoveredSong, setHoveredSong] = useState<Song | null>(null);
+
   const waitTime = (index: number) => {
     if (index === 0) {
       return 'Now Playing';
@@ -17,7 +19,7 @@ export default function JukeboxQueue({ currentQueue }: { currentQueue: Song[] })
   };
 
   return (
-    <>
+    <Box position='relative'>
       <Box bg='gray.800' borderRadius='lg' p={4} maxHeight='350px' overflowY='auto'>
         {currentQueue.length > 0 ? (
           currentQueue.map((song, index) => (
@@ -28,7 +30,9 @@ export default function JukeboxQueue({ currentQueue }: { currentQueue: Song[] })
               borderRadius='md'
               bg='gray.700'
               _hover={{ bg: 'gray.600' }}
-              alignItems='center'>
+              alignItems='center'
+              onMouseEnter={() => setHoveredSong(song)}
+              onMouseLeave={() => setHoveredSong(null)}>
               <Box
                 w='10px'
                 h='10px'
@@ -47,6 +51,40 @@ export default function JukeboxQueue({ currentQueue }: { currentQueue: Song[] })
           <Text>No songs in the queue yet!</Text>
         )}
       </Box>
-    </>
+
+      {hoveredSong && (
+        <Box
+          position='absolute'
+          bottom='-150px'
+          left='50%'
+          transform='translateX(-50%)'
+          bg='gray.900'
+          color='white'
+          p={4}
+          borderRadius='md'
+          boxShadow='lg'
+          zIndex='overlay'>
+          <HStack spacing={4}>
+            <Image
+              src={hoveredSong.artworkUrl || '/placeholder.png'}
+              alt='Song cover art'
+              boxSize='80px'
+              borderRadius='full'
+            />
+            <VStack align='start' spacing={0.5}>
+              <Text fontWeight='bold'>{hoveredSong.songName}</Text>
+              <Text fontSize='sm'>Artist: {hoveredSong.artistName}</Text>
+              <Text fontSize='sm'>Album: {hoveredSong.albumName}</Text>
+              <Text fontSize='sm'>
+                Duration: {Math.floor(hoveredSong.songDurationSec / 60000)}:
+                {Math.floor((hoveredSong.songDurationSec % 60000) / 1000)
+                  .toString()
+                  .padStart(2, '0')}
+              </Text>
+            </VStack>
+          </HStack>
+        </Box>
+      )}
+    </Box>
   );
 }

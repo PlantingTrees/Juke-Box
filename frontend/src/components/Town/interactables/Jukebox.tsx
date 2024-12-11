@@ -25,8 +25,8 @@ import {
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
 import { Song } from '../../../../../shared/types/CoveyTownSocket';
-import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
 import JukeboxSong from './JukeboxComponents/JukeboxSong';
+import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
 
 declare global {
   interface Window {
@@ -275,7 +275,7 @@ export function JukeboxArea({
                 {/* Left Panel: Search and Volume */}
                 <GridItem>
                   <VStack spacing={6} align='stretch'>
-                    <Box bg='gray.800' p={4} borderRadius='lg' color={'black'}>
+                    <Box bg='gray.800' p={4} borderRadius='lg' color='black'>
                       <JukeboxSearch setQueueItems={addSongToQueue} />
                     </Box>
                     <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
