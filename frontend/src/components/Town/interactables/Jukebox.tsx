@@ -60,6 +60,8 @@ export function JukeboxArea({
   const [token, setToken] = useState<string | null>(null); // Spotify token state
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if the user is logged in
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<string | null>(null); // State for currently playing track
+
   const playerRef = useRef<any>(null);
 
   const closeModal = useCallback(() => {
@@ -83,14 +85,6 @@ export function JukeboxArea({
     });
   };
 
-  // Implementation of how we should use the player
-  // useEffect(() => {
-  //   if (queueItems.length) {
-  //     // play queueItems[0]
-  //   }
-  // }, [queue]);
-
-  //TODO: Add an emitter for the currentlyPlaying song whenever we swap a song.
   useEffect(() => {
     const queueListener = (newQueue: Song[]) => {
       setQueueItems(newQueue);
@@ -106,7 +100,7 @@ export function JukeboxArea({
   // Function to handle Spotify login
   const loginToSpotify = () => {
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI as string; // Adjust based on your setup
+    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI as string;
     const scopes =
       'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative';
     const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(
@@ -137,6 +131,7 @@ export function JukeboxArea({
 
   const handleSongEnd = () => {
     setQueueItems(prevQueue => {
+      console.log('Before update:', prevQueue);
       if (prevQueue.length <= 1) {
         jukeboxAreaController.songs = []; // Clear songs when queue is empty or only one remains
         coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
@@ -145,6 +140,8 @@ export function JukeboxArea({
 
       const newQueue = prevQueue.slice(1); // Remove the first song
       jukeboxAreaController.songs = newQueue; // Update controller
+      console.log('After update:', newQueue);
+
       coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController); // Emit the change
       return newQueue; // Update state
     });
@@ -195,12 +192,18 @@ export function JukeboxArea({
         console.error('Account error:', message);
       });
 
+      let debounceTimeout: NodeJS.Timeout | null = null;
+
       player.addListener('player_state_changed', state => {
         console.log('Player state changed:', state);
         if (!state) return;
 
         if (state.paused && state.position === 0 && state.track_window.previous_tracks.length > 0) {
-          handleSongEnd();
+          if (debounceTimeout) clearTimeout(debounceTimeout);
+
+          debounceTimeout = setTimeout(() => {
+            handleSongEnd();
+          }, 100); // Wait 100ms to ensure no duplicate calls (this is essential. DO NOT DELETE.)
         }
       });
 
@@ -213,14 +216,26 @@ export function JukeboxArea({
         playerRef.current.disconnect();
       }
     };
-  }, [token, volume]);
+  }, [token]);
+
+  // Update player volume when the slider changes
+  useEffect(() => {
+    if (playerRef.current) {
+      playerRef.current.setVolume(volume / 100).catch((error: unknown) => {
+        console.error('Error setting volume:', error);
+      });
+    }
+  }, [volume]);
 
   // Play songs when the queue changes
   useEffect(() => {
     if (!deviceId || !queueItems.length || !token) return;
 
-    const playTrack = () => {
-      const trackUri = queueItems[0].trackUri;
+    const trackUri = queueItems[0].trackUri;
+
+    // Only play if the current track is different
+    if (trackUri !== currentTrack) {
+      setCurrentTrack(trackUri); // Update current track
 
       fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
@@ -230,10 +245,8 @@ export function JukeboxArea({
           'Content-Type': 'application/json',
         },
       }).catch(error => console.error('Error playing track:', error));
-    };
-
-    playTrack();
-  }, [queueItems, deviceId, token]);
+    }
+  }, [queueItems, deviceId, token, currentTrack]);
 
   return (
     <>

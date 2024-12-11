@@ -30,6 +30,7 @@ export default function TownSelection(): JSX.Element {
   const [newTownIsPublic, setNewTownIsPublic] = useState<boolean>(true);
   const [townIDToJoin, setTownIDToJoin] = useState<string>('');
   const [currentPublicTowns, setCurrentPublicTowns] = useState<Town[]>();
+  const [isSpotifyLoggedIn, setIsSpotifyLoggedIn] = useState(false);
   const loginController = useLoginController();
   const { setTownController, townsService } = loginController;
   const { connect: videoConnect } = useVideoContext();
@@ -161,6 +162,27 @@ export default function TownSelection(): JSX.Element {
     }
   };
 
+  // Function to handle Spotify login
+  const loginToSpotify = () => {
+    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI as string;
+    const scopes =
+      'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative';
+    const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(
+      redirectUri,
+    )}`;
+
+    window.location.href = authUrl; // Redirect user to login page
+  };
+
+  useEffect(() => {
+    // Check if the user is already logged into Spotify (e.g., look for token in URL or localStorage)
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+    if (hashParams.has('access_token')) {
+      setIsSpotifyLoggedIn(true); // Update state if the user is logged in
+    }
+  }, []);
+
   return (
     <>
       <form>
@@ -180,6 +202,22 @@ export default function TownSelection(): JSX.Element {
                 onChange={event => setUserName(event.target.value)}
               />
             </FormControl>
+          </Box>
+          <Box borderWidth='1px' borderRadius='lg'>
+            <Heading p='4' as='h2' size='lg'>
+              Login to Spotify
+            </Heading>
+            <Flex p='4' alignItems='center'>
+              <Button
+                onClick={loginToSpotify}
+                isDisabled={isSpotifyLoggedIn}
+                colorScheme={isSpotifyLoggedIn ? 'gray' : 'green'}>
+                {isSpotifyLoggedIn ? 'Logged In' : 'Login to Spotify'}
+              </Button>
+              <Box ml='4'>
+                Logging into Spotify allows you to interact with the Covey.Town Jukebox!
+              </Box>
+            </Flex>
           </Box>
           <Box borderWidth='1px' borderRadius='lg'>
             <Heading p='4' as='h2' size='lg'>
