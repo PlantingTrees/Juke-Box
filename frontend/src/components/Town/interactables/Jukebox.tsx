@@ -72,34 +72,34 @@ export function JukeboxArea({
             closeModal();
             coveyTownController.unPause();
           }}
-          size="4xl">
+          size='4xl'>
           <ModalOverlay />
           <ModalContent
-            bg="linear-gradient(135deg, #1f1f1f, #282828)"
-            color="white"
-            borderRadius="lg"
+            bg='linear-gradient(135deg, #1f1f1f, #282828)'
+            color='white'
+            borderRadius='lg'
             p={6}
-            maxWidth="1200px"
-            boxShadow="xl">
-            <ModalHeader fontSize="2xl" fontWeight="bold" borderBottom="1px solid gray">
+            maxWidth='1200px'
+            boxShadow='xl'>
+            <ModalHeader fontSize='2xl' fontWeight='bold' borderBottom='1px solid gray'>
               Covey.Town Jukebox
             </ModalHeader>
-            <ModalCloseButton color="white" />
+            <ModalCloseButton color='white' />
             <ModalBody>
-              <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+              <Grid templateColumns='repeat(2, 1fr)' gap={6}>
                 {/* Left Panel: Search and Volume */}
                 <GridItem>
-                  <VStack spacing={6} align="stretch">
-                    <Box bg="gray.800" p={4} borderRadius="lg" color="black">
+                  <VStack spacing={6} align='stretch'>
+                    <Box bg='gray.800' p={4} borderRadius='lg' color='black'>
                       <JukeboxSearch setQueueItems={addSongToQueue} />
                     </Box>
-                    <HStack spacing={4} p={4} bg="gray.800" borderRadius="lg" alignItems="center">
+                    <HStack spacing={4} p={4} bg='gray.800' borderRadius='lg' alignItems='center'>
                       <IconButton
                         icon={volume === 0 ? <VolumeX /> : <Volume2 />}
-                        aria-label="Toggle mute"
+                        aria-label='Toggle mute'
                         onClick={() => setVolume(volume === 0 ? 50 : 0)}
-                        size="lg"
-                        bg="gray.700"
+                        size='lg'
+                        bg='gray.700'
                         _hover={{ bg: 'gray.600' }}
                       />
                       <Slider
@@ -108,9 +108,9 @@ export function JukeboxArea({
                         min={0}
                         max={100}
                         flex={1}
-                        aria-label="Volume Slider">
-                        <SliderTrack bg="gray.600">
-                          <SliderFilledTrack bg="teal.400" />
+                        aria-label='Volume Slider'>
+                        <SliderTrack bg='gray.600'>
+                          <SliderFilledTrack bg='teal.400' />
                         </SliderTrack>
                         <SliderThumb boxSize={4} />
                       </Slider>
@@ -120,7 +120,7 @@ export function JukeboxArea({
 
                 {/* Right Panel: Current Song or Queue */}
                 <GridItem>
-                  <VStack spacing={6} align="stretch">
+                  <VStack spacing={6} align='stretch'>
                     {isQueueVisible ? (
                       <JukeboxQueue currentQueue={queueItems} />
                     ) : (
@@ -128,17 +128,17 @@ export function JukeboxArea({
                     )}
                     <Button
                       onClick={() => setIsQueueVisible(!isQueueVisible)}
-                      variant="solid"
-                      colorScheme="teal"
-                      size="lg"
-                      width="100%">
+                      variant='solid'
+                      colorScheme='teal'
+                      size='lg'
+                      width='100%'>
                       {isQueueVisible ? 'Show Song' : 'Show Queue'}
                     </Button>
                   </VStack>
                 </GridItem>
               </Grid>
             </ModalBody>
-            <ModalFooter borderTop="1px solid gray" />
+            <ModalFooter borderTop='1px solid gray' />
           </ModalContent>
         </Modal>
       )}
