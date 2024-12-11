@@ -21,7 +21,6 @@ import {
   HStack,
   Grid,
   GridItem,
-  Text,
 } from '@chakra-ui/react';
 import useTownController from '../../../hooks/useTownController';
 import JukeboxSearch from './JukeboxComponents/JukeboxSearch';
