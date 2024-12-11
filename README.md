@@ -45,3 +45,7 @@ Create a `.env` file in the `frontend` directory, with the line: `NEXT_PUBLIC_TO
 
 In the `frontend` directory, run `npm start` (again, you'll need to run `npm install` the very first time). After several moments (or minutes, depending on the speed of your machine), a browser will open with the frontend running locally.
 The frontend will automatically re-compile and reload in your browser if you change any files in the `frontend/src` directory.
+
+### Running the Jukebox Component on Local
+
+In the frontend .env file you will need to add three lines to be able to connect to the jukebox service we implemented. Be sure to add `NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000` (Change location depending on deployment), and `NEXT_PUBLIC_SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` to your frontend .env file. On your backend please include `SPOTIFY_CLIENT_ID=9b5ec263a84b49fcb1781139465630ba` and `SPOTIFY_CLIENT_SECRET=0a2a86b51ecc48de97ae93f168786ca8` to the .env file.
