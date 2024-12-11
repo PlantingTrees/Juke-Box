@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import JukeboxAreaInteractable from './JukeboxArea';
 import { Volume2, VolumeX } from 'lucide-react';
 import { useInteractable, useJukeboxAreaController } from '../../../classes/TownController';
@@ -29,6 +29,23 @@ import { Song } from '../../../../../shared/types/CoveyTownSocket';
 import JukeboxSong from './JukeboxComponents/JukeboxSong';
 import JukeboxQueue from './JukeboxComponents/JukeboxQueue';
 
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        connect: () => void;
+        disconnect: () => void;
+        addListener: (event: string, callback: (data: any) => void) => void;
+      };
+    };
+  }
+}
+
 export function JukeboxArea({
   jukeboxArea,
 }: {
@@ -41,6 +58,12 @@ export function JukeboxArea({
   const [volume, setVolume] = useState(50);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
   const [queueItems, setQueueItems] = useState<Song[]>(jukeboxAreaController.songs);
+  const [token, setToken] = useState<string | null>(null); // Spotify token state
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if the user is logged in
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<string | null>(null); // State for currently playing track
+
+  const playerRef = useRef<any>(null);
 
   const closeModal = useCallback(() => {
     if (jukeboxArea) {
@@ -62,6 +85,169 @@ export function JukeboxArea({
       return newQueue;
     });
   };
+
+  useEffect(() => {
+    const queueListener = (newQueue: Song[]) => {
+      setQueueItems(newQueue);
+    };
+
+    jukeboxAreaController.addListener('songsAdded', queueListener);
+    coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
+    return () => {
+      jukeboxAreaController.removeListener('songsAdded', queueListener);
+    };
+  }, [jukeboxAreaController, coveyTownController]);
+
+  // Function to handle Spotify login
+  const loginToSpotify = () => {
+    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI as string;
+    const scopes =
+      'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative';
+    const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(
+      redirectUri,
+    )}`;
+
+    window.location.href = authUrl; // Redirect user to login page
+  };
+
+  // Function to handle Spotify token from URL hash
+  const handleSpotifyToken = useCallback(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.slice(1)); // Remove the '#' symbol
+      const accessToken = params.get('access_token');
+      if (accessToken) {
+        setToken(accessToken);
+        setIsLoggedIn(true); // Mark as logged in
+        window.location.hash = ''; // Clean up the URL hash after processing
+      }
+    }
+  }, []);
+
+  // Check for token in URL when the component mounts
+  useEffect(() => {
+    handleSpotifyToken();
+  }, [handleSpotifyToken]);
+
+  const handleSongEnd = () => {
+    setQueueItems(prevQueue => {
+      console.log('Before update:', prevQueue);
+      if (prevQueue.length <= 1) {
+        jukeboxAreaController.songs = []; // Clear songs when queue is empty or only one remains
+        coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController);
+        return [];
+      }
+
+      const newQueue = prevQueue.slice(1); // Remove the first song
+      jukeboxAreaController.songs = newQueue; // Update controller
+      console.log('After update:', newQueue);
+
+      coveyTownController.emitJukeboxAreaUpdate(jukeboxAreaController); // Emit the change
+      return newQueue; // Update state
+    });
+  };
+
+  // Load and initialize the Spotify Player when the modal opens
+  useEffect(() => {
+    if (!token) return;
+
+    if (!window.Spotify) {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.scdn.co/spotify-player.js';
+      script.async = true;
+
+      script.onload = () => {
+        console.log('Spotify SDK script loaded.');
+      };
+
+      document.body.appendChild(script);
+    }
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      console.log('Spotify SDK is ready');
+      const player = new window.Spotify.Player({
+        name: 'Covey.town Jukebox Player',
+        getOAuthToken: cb => cb(token),
+        volume: volume / 100,
+      });
+
+      player.addListener('ready', ({ device_id }) => {
+        console.log('Player is ready with Device ID:', device_id);
+        setDeviceId(device_id);
+      });
+
+      player.addListener('not_ready', ({ device_id }) => {
+        console.error('Player is not ready:', device_id);
+      });
+
+      player.addListener('initialization_error', ({ message }) => {
+        console.error('Initialization error:', message);
+      });
+
+      player.addListener('authentication_error', ({ message }) => {
+        console.error('Authentication error:', message);
+      });
+
+      player.addListener('account_error', ({ message }) => {
+        console.error('Account error:', message);
+      });
+
+      let debounceTimeout: NodeJS.Timeout | null = null;
+
+      player.addListener('player_state_changed', state => {
+        console.log('Player state changed:', state);
+        if (!state) return;
+
+        if (state.paused && state.position === 0 && state.track_window.previous_tracks.length > 0) {
+          if (debounceTimeout) clearTimeout(debounceTimeout);
+
+          debounceTimeout = setTimeout(() => {
+            handleSongEnd();
+          }, 100); // Wait 100ms to ensure no duplicate calls (this is essential. DO NOT DELETE.)
+        }
+      });
+
+      player.connect();
+      playerRef.current = player;
+    };
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.disconnect();
+      }
+    };
+  }, [token]);
+
+  // Update player volume when the slider changes
+  useEffect(() => {
+    if (playerRef.current) {
+      playerRef.current.setVolume(volume / 100).catch((error: unknown) => {
+        console.error('Error setting volume:', error);
+      });
+    }
+  }, [volume]);
+
+  // Play songs when the queue changes
+  useEffect(() => {
+    if (!deviceId || !queueItems.length || !token) return;
+
+    const trackUri = queueItems[0].trackUri;
+
+    // Only play if the current track is different
+    if (trackUri !== currentTrack) {
+      setCurrentTrack(trackUri); // Update current track
+
+      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [trackUri] }),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }).catch(error => console.error('Error playing track:', error));
+    }
+  }, [queueItems, deviceId, token, currentTrack]);
 
   return (
     <>
@@ -138,6 +324,28 @@ export function JukeboxArea({
                 </GridItem>
               </Grid>
             </ModalBody>
+            <ModalFooter
+              borderTop='1px solid gray'
+              display='flex'
+              flexDirection='column'
+              alignItems='center'>
+              {!isLoggedIn && (
+                <>
+                  <Button
+                    onClick={loginToSpotify}
+                    variant='solid'
+                    colorScheme='teal'
+                    size='md'
+                    width='100%'
+                    mb={2}>
+                    Log in to Spotify
+                  </Button>
+                  <Box color='gray.400' fontSize='sm' textAlign='center'>
+                    Log in to Spotify to listen to the Covey.Town Jukebox!
+                  </Box>
+                </>
+              )}
+            </ModalFooter>
             <ModalFooter borderTop='1px solid gray' />
           </ModalContent>
         </Modal>
