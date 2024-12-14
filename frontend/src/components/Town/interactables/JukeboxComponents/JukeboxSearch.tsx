@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Song } from '../../../../types/CoveyTownSocket';
 import { Search } from 'lucide-react';
 import {
   Input,
@@ -12,98 +11,83 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import axios from 'axios';
+
+// Define a specific type for Spotify songs
+export interface SpotifySong {
+  songDurationSec: number;
+  duration_ms: number;
+  uri: string;
+  name: string;
+  artists: { name: string }[];
+  album: {
+    images: any; name: string 
+};
+}
 
 export default function JukeboxSearch({
   setQueueItems,
 }: {
-  setQueueItems: (song: Song) => void;
+  setQueueItems: (song: SpotifySong) => void;
 }): JSX.Element {
-  const [results, setResults] = useState<Song[]>([]);
+  const [results, setResults] = useState<SpotifySong[]>([]);
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Track loading state
+  const [isLoading, setIsLoading] = useState(false);
   const jukeboxToast = useToast();
 
-  const backendURL = process.env.NEXT_PUBLIC_TOWNS_SERVICE_URL;
-
-  // // Function to handle search and make a call to the backend
-  // const handleSearch = async () => {
-  //   if (!query.trim()) return; // Do nothing for empty queries
-
-  //   setIsLoading(true); // Start loading spinner
-  //   try {
-  //     const response = await axios.get(`https://api.spotify.com/v1/search`, {
-  //       params: { query }, // Query parameter sent to the backend
-  //     });
-
-  //     console.log('i got the song data here: ', response.data);
-  //   } catch (error) {
-  //     console.error('Search failed:', error);
-  //     console.log(error);
-  //     jukeboxToast({
-  //       description: 'Failed to fetch search results. Please try again.',
-  //       status: 'error',
-  //     });
-  //   } finally {
-  //     setIsLoading(false); // Stop loading spinner
-  //   }
-  // };
-
   const searchSpotify = async (accessToken: string, user_query: string) => {
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(user_query)}&type=track&limit=10`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`, // Authorization header with Bearer token
+    if (!user_query.trim()) return;
+    console.log('searching for:', user_query);
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(user_query)}&type=track&limit=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      },
-    );
+      );
 
-    if (!response.ok) {
-      throw new Error('Error fetching data from Spotify API');
+      if (!response.ok) {
+        throw new Error('Error fetching data from Spotify API');
+      }
+
+      const data = await response.json();
+      console.log(data.tracks.items);
+      setResults(data.tracks.items);
+    } catch(error) {
+      jukeboxToast({
+        description: 'Search Failed.',
+        status: 'error',
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await response.json();
-    return data.tracks.items; // Return the array of tracks
   };
 
-  useEffect(() => {
-    const searchForTracks = async () => {
-      const accessToken = localStorage.getItem('spotify-access-token');
-      if (!accessToken) {
-        console.error('Access token not found');
-        return; // Exit early if no access token is found
-      }
+  const searchForTracks = async (query: string) => {
+    const accessToken = localStorage.getItem('spotify-access-token');
+    if (!accessToken) {
+      console.error('Access token not found');
+      return;
+    }
 
-      const searchQuery = 'Imagine Dragons'; // Search query
-      try {
-        const tracks = await searchSpotify(accessToken, searchQuery); // Call search function
-        console.log('I have the tracks here: ', tracks); // Logs the list of tracks from the search
-      } catch (error) {
-        console.error('Error searching tracks:', error); // Handle any errors
-      }
-    };
-
-    // Call the search function
-    searchForTracks();
-  }, []); // Empty dependency array to run once on mount
+    await searchSpotify(accessToken, query);
+  };
 
   const addSong = useCallback(
-    async (song: Song) => {
+    (song: SpotifySong) => {
       try {
         setQueueItems(song); // Add selected song to the queue
       } catch (error) {
         jukeboxToast({
           description: `${error}`,
-          status: `error`,
+          status: 'error',
         });
       }
     },
-    [jukeboxToast, setQueueItems],
+    [setQueueItems],
   );
-  useEffect(() => {
-    console.log('i have the token here at search: ', localStorage.getItem('spotify-access-token'));
-  }, []);
 
   return (
     <>
@@ -115,10 +99,9 @@ export default function JukeboxSearch({
             placeholder='Search for songs...'
             bg='white'
             onKeyDown={e => {
-              // Prevent default behavior and stop propagation
-              e.stopPropagation(); // Prevents the event from reaching global handlers
+              e.stopPropagation(); 
               if (e.key === 'Enter') {
-              //  searchForTracks(); // Trigger search on Enter key
+                searchForTracks(query); 
               }
             }}
           />
@@ -128,7 +111,7 @@ export default function JukeboxSearch({
               aria-label='Search'
               size='sm'
               variant='ghost'
-             // onClick={searchForTracks} // Trigger search on button click
+              onClick={() => searchForTracks(query)}
               _hover={{ bg: 'gray.200' }}
             />
           </InputRightElement>
@@ -153,7 +136,8 @@ export default function JukeboxSearch({
                 borderRadius='md'>
                 <Box flex='1' cursor='pointer' onClick={() => addSong(result)}>
                   <Text>
-                    {result.songName} - {result.artistName} | {result.albumName}
+            
+                    {result.name} - {result.artists[0].name} | {result.album.name}
                   </Text>
                 </Box>
                 <Box>
