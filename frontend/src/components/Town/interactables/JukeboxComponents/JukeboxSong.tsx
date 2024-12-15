@@ -22,17 +22,17 @@ export default function JukeboxSong({ currentQueue }: { currentQueue: SpotifySon
               Currently Playing:
             </Text>
             <Image
-              src={currentQueue[1]?.album.images[0].url || '/placeholder.png'}
+              src={currentQueue[0]?.album.images[0].url || '/placeholder.png'}
               alt='Song artwork'
               boxSize='200px'
               objectFit='cover'
               borderRadius='md'
             />
             <Text mt={4} fontSize='xl' fontWeight='bold'>
-              {currentQueue[1]?.name}
+              {currentQueue[0]?.name}
             </Text>
             <Text fontSize='lg' color='gray.400'>
-              by {currentQueue[1]?.artists[0].name}
+              by {currentQueue[0]?.artists[0].name}
             </Text>
           </>
         ) : (

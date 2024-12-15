@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
 import {
-  Input,
-  Text,
-  VStack,
   Box,
+  IconButton,
+  Input,
   InputGroup,
   InputRightElement,
-  IconButton,
-  useToast,
   Spinner,
+  Text,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
+import { Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import JukeboxQueue from './JukeboxQueue';
 
 // Define a specific type for Spotify songs
 export interface SpotifySong {
@@ -20,16 +21,16 @@ export interface SpotifySong {
   name: string;
   artists: { name: string }[];
   album: {
-    images: any; name: string 
-};
+    images: any;
+    name: string;
+  };
 }
-
-export default function JukeboxSearch({
-  setQueueItems,
-}: {
-  setQueueItems: (song: SpotifySong) => void;
-}): JSX.Element {
-  const [results, setResults] = useState<SpotifySong[]>([]);
+interface JukeboxQueueProps {
+  onSongSelected: (song: SpotifySong) => void;
+}
+export default function JukeboxSearch({ onSongSelected }: JukeboxQueueProps): JSX.Element {
+  const [results, setResults] = useState<SpotifySong[]>([]); //search results
+  
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const jukeboxToast = useToast();
@@ -55,7 +56,7 @@ export default function JukeboxSearch({
       const data = await response.json();
       console.log(data.tracks.items);
       setResults(data.tracks.items);
-    } catch(error) {
+    } catch (error) {
       jukeboxToast({
         description: 'Search Failed.',
         status: 'error',
@@ -75,19 +76,6 @@ export default function JukeboxSearch({
     await searchSpotify(accessToken, query);
   };
 
-  const addSong = useCallback(
-    (song: SpotifySong) => {
-      try {
-        setQueueItems(song); // Add selected song to the queue
-      } catch (error) {
-        jukeboxToast({
-          description: `${error}`,
-          status: 'error',
-        });
-      }
-    },
-    [setQueueItems],
-  );
 
   return (
     <>
@@ -98,10 +86,12 @@ export default function JukeboxSearch({
             onChange={e => setQuery(e.target.value)}
             placeholder='Search for songs...'
             bg='white'
+            color='black'
+            _placeholder={{ color: 'gray.500' }}
             onKeyDown={e => {
-              e.stopPropagation(); 
+              e.stopPropagation();
               if (e.key === 'Enter') {
-                searchForTracks(query); 
+                searchForTracks(query);
               }
             }}
           />
@@ -110,51 +100,53 @@ export default function JukeboxSearch({
               icon={<Search size={20} />}
               aria-label='Search'
               size='sm'
+              color='black'
               variant='ghost'
               onClick={() => searchForTracks(query)}
               _hover={{ bg: 'gray.200' }}
             />
           </InputRightElement>
         </InputGroup>
-      </Box>
 
-      <Box flex={1} overflowY='auto' maxH='300px' borderRadius='md' bg='gray.50' p={2}>
-        {isLoading ? (
-          <Box display='flex' justifyContent='center' alignItems='center' height='100%'>
-            <Spinner size='lg' color='blue.500' />
-          </Box>
-        ) : (
-          <VStack align='stretch' spacing={2}>
-            {results.map((result, index) => (
-              <Box
-                key={index}
-                p={2}
-                display='flex'
-                justifyContent='space-between'
-                alignItems='center'
-                _hover={{ bg: 'gray.100' }}
-                borderRadius='md'>
-                <Box flex='1' cursor='pointer' onClick={() => addSong(result)}>
-                  <Text>
-            
-                    {result.name} - {result.artists[0].name} | {result.album.name}
-                  </Text>
+        <Box flex={1} overflowY='auto' maxH='300px' borderRadius='md' bg='gray.50' p={2}>
+          {isLoading ? (
+            <Box display='flex' justifyContent='center' alignItems='center' height='100%'>
+              <Spinner size='lg' color='blue.500' />
+            </Box>
+          ) : (
+            <VStack align='stretch' spacing={2}>
+              {results.map((result, index) => (
+                <Box
+                  key={index}
+                  p={2}
+                  display='flex'
+                  color='black'
+                  justifyContent='space-between'
+                  alignItems='center'
+                  _hover={{ bg: 'gray.100' }}
+                  borderRadius='md'>
+                  <Box flex='1' cursor='pointer' onClick={() => onSongSelected(result)}>
+                    <Text>
+                      {result.name} - {result.artists[0].name} | {result.album.name}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <IconButton
+                      aria-label='Add to queue'
+                      icon={<Text fontSize='xl'>+</Text>}
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => onSongSelected(result)}
+                      _hover={{ bg: 'gray.200' }}
+                    />
+                  </Box>
                 </Box>
-                <Box>
-                  <IconButton
-                    aria-label='Add to queue'
-                    icon={<Text fontSize='xl'>+</Text>}
-                    size='sm'
-                    variant='ghost'
-                    onClick={() => addSong(result)}
-                    _hover={{ bg: 'gray.200' }}
-                  />
-                </Box>
-              </Box>
-            ))}
-          </VStack>
-        )}
+              ))}
+            </VStack>
+          )}
+        </Box>
       </Box>
+      
     </>
   );
 }

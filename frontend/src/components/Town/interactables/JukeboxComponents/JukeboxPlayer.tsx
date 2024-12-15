@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { 
-  HStack, 
-  Slider, 
-  SliderTrack, 
-  SliderFilledTrack, 
-  SliderThumb, 
-  IconButton 
+import {
+  HStack,
+  IconButton,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
 } from '@chakra-ui/react';
 import { Volume2, VolumeX } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 declare global {
   interface Window {
@@ -27,11 +27,11 @@ declare global {
   }
 }
 
-type songProp = {
-  songURI: string
-}
+type JukeboxPlayerProps = {
+  songURI: string;
+};
 
-export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
+function JukeboxPlayer({ songURI,  }: JukeboxPlayerProps): JSX.Element {
   const [volume, setVolume] = useState(50);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [player, setPlayer] = useState<any>(null);
@@ -112,6 +112,9 @@ export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
     spotifyPlayer.addListener('account_error', ({ message }) => {
       console.error('Account error:', message);
     });
+
+    
+    
   };
 
   const playSong = async (songUri: string) => {
@@ -130,8 +133,8 @@ export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
         },
         body: JSON.stringify({
           device_ids: [deviceId],
-          play: false
-        })
+          play: false,
+        }),
       });
 
       // Then play the specific track
@@ -143,8 +146,8 @@ export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
         },
         body: JSON.stringify({
           uris: [songUri], // Spotify URI for the track
-          device_id: deviceId
-        })
+          device_id: deviceId,
+        }),
       });
 
       console.log('Started playing song:', songUri);
@@ -174,14 +177,14 @@ export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
         bg='gray.700'
         _hover={{ bg: 'gray.600' }}
       />
+
       <Slider
         value={volume}
         onChange={setVolume}
         min={0}
         max={100}
         flex={1}
-        aria-label='Volume Slider'
-      >
+        aria-label='Volume Slider'>
         <SliderTrack bg='gray.600'>
           <SliderFilledTrack bg='teal.400' />
         </SliderTrack>
@@ -190,3 +193,5 @@ export default function JukeboxPlayer({ songURI }: songProp): JSX.Element {
     </HStack>
   );
 }
+
+export default JukeboxPlayer;
